@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check Available Voices</title>
+</head>
+<body>
+    <h2>Available Voices:</h2>
+    <div id="voices"></div>
+    <script>
+        function showVoices() {
+            const voices = window.speechSynthesis.getVoices();
+            const voicesDiv = document.getElementById('voices');
+            voices.forEach(voice => {
+                const voiceInfo = document.createElement('p');
+                voiceInfo.textContent = `${voice.name} - ${voice.lang} - ${voice.gender || 'unknown'}`;
+                voicesDiv.appendChild(voiceInfo);
+            });
+        }
+
+        // Wait for voices to be loaded
+        if (window.speechSynthesis.getVoices().length === 0) {
+            window.speechSynthesis.onvoiceschanged = showVoices;
+        } else {
+            showVoices();
+        }
+    </script>
+</body>
+</html> 

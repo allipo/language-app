@@ -1,0 +1,27 @@
+.shiny-button {
+  display: inline-block;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+  text-decoration: none;
+  background: linear-gradient(45deg, #98e2de, #92d68a);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  text-align: center;
+  width: 80%;
+  max-width: 300px;
+}
+
+.shiny-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #ab88e2, #e9d696);
+}
+
+.shiny-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+} 

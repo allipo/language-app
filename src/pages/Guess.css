@@ -1,0 +1,113 @@
+.guess-word-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  justify-content: center;
+}
+
+.guess-word-item {
+  padding: 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  max-width: 120px;
+  text-align: center;
+}
+
+.guess-word-item h3 {
+  margin: 0;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.guess-word-item.highlighted {
+  background-color: lightblue;
+}
+
+.guess-picture-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.guess-picture-item {
+  width: 150px;
+  height: 150px;
+  overflow: hidden;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.guess-picture-item:hover {
+  box-shadow: 0 0 15px rgba(61, 61, 55, 0.5);
+  transform: scale(1.02);
+}
+
+.guess-picture-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.guess-picture-container {
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+@media (min-width: 768px) {
+  .guess-word-list {
+    gap: 1rem;
+    margin-top: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .guess-word-item {
+    padding: 1rem;
+    max-width: 150px;
+  }
+
+  .guess-word-item h3 {
+    font-size: 1.25rem;
+  }
+
+  .guess-picture-item {
+    width: 200px;
+    height: 200px;
+  }
+}
+
+@media (max-width: 480px) {
+  .guess-word-list {
+    gap: 0.25rem;
+    margin-top: 1rem;
+  }
+
+  .guess-word-item {
+    padding: 0.25rem;
+    max-width: 100px;
+  }
+
+  .guess-word-item h3 {
+    margin-bottom: 0.1rem;
+  }
+
+  .guess-picture-item {
+    width: 120px;
+    height: 120px;
+  }
+
+  .guess-romaji-pinyin {
+    margin-top: 1px;
+    font-size: 0.7em;
+  }
+}
+
+.guess-romaji-pinyin {
+  font-size: 0.8em;
+  font-style: italic;
+  color: #666;
+  margin-top: 2px;
+} 

@@ -1,0 +1,94 @@
+.congratulations {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 100px;
+  text-align: center;
+  padding: 20px;
+}
+
+.congratulations h1 {
+  font-size: 3rem;
+  margin-bottom: 50px;
+}
+
+.back-button {
+  padding: 1rem 2rem;
+  font-size: 1.2rem;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.back-button:hover {
+  background-color: #45a049;
+}
+
+.shiny-button {
+  display: inline-block;
+  padding: 15px 30px;
+  font-size: 1.2em;
+  font-weight: bold;
+  color: rgb(0, 0, 0);
+  text-decoration: none;
+  background: linear-gradient(45deg, #98e2de, #92d68a);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  margin-top: 20px;
+  text-align: center;
+  width: 80%;
+  max-width: 300px;
+  border: none;
+  cursor: pointer;
+}
+
+.shiny-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  background: linear-gradient(45deg, #ab88e2, #e9d696);
+}
+
+.shiny-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .congratulations {
+    padding-top: 120px;
+  }
+
+  .congratulations h1 {
+    font-size: 3rem;
+    margin-bottom: 60px;
+  }
+
+  .back-button {
+    font-size: 1.1rem;
+    padding: 0.4rem 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .congratulations {
+    padding-top: 140px;
+  }
+
+  .congratulations h1 {
+    font-size: 2rem;
+    margin-bottom: 70px;
+  }
+
+  .back-button {
+    font-size: 1rem;
+    padding: 0.3rem 0.6rem;
+    width: 200px;
+  }
+} 
