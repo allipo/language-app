@@ -20,4 +20,9 @@ npm-debug.log*
 /build
 /.pnp
 .pnp.js
-coverage/ 
+coverage/
+
+# Security
+*.json
+*.txt
+*.docx 
