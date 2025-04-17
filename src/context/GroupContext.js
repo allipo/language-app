@@ -49,7 +49,7 @@ export function GroupProvider({ children }) {
       }
     };
     loadSavedGroup();
-  }, [selectedGroup?._id]); // Only depend on the ID, not the whole object
+  }, [selectedGroup]);
 
   const selectGroup = useCallback(async (group) => {
     if (!group) {

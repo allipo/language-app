@@ -14,7 +14,7 @@ function Edit() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalGroups, setTotalGroups] = useState(0);
   const groupsPerPage = 30;
-  const { selectedGroup, selectGroup } = useGroup();
+  const { selectedGroup } = useGroup();
 
   const languageNames = {
     zh: 'Chinese',
