@@ -58,7 +58,7 @@ function EditWordGroup() {
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch('http://localhost:5000/api/upload', {
+    const response = await fetch('https://allisons-language-app.de.r.appspot.com/api/upload', {
       method: 'POST',
       body: formData
     });

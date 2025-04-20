@@ -58,7 +58,7 @@ function Input() {
       formData.append(fieldName, file);
     });
 
-    const response = await fetch('http://localhost:5000/api/upload', {
+    const response = await fetch('https://allisons-language-app.de.r.appspot.com/api/upload', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('token')}`
