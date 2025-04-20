@@ -1,4 +1,5 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://allisons-language-app.uc.r.appspot.com/api';
+console.log('API URL:', API_URL, 'Env var:', process.env.REACT_APP_API_URL);
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('token');
