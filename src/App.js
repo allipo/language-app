@@ -48,7 +48,6 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
           <Route path="/admindashboard" element={<AdminDashboard />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/learn" element={<Learn />} />
           <Route path="/group-launch" element={<GroupLaunch />} />
           <Route path="/input" element={
