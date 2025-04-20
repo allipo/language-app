@@ -3,6 +3,7 @@ node_modules/
 
 # Environment variables
 .env
+app.yaml
 
 # IDE
 .vscode/

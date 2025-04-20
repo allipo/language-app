@@ -55,7 +55,9 @@ const bucket = storage.bucket(process.env.SERVER_GOOGLE_CLOUD_BUCKET_NAME);
 const app = express();
 connectDB();
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://vocabinet.netlify.app']
+}));
 app.use(express.json());
 app.use(fileUpload());
 app.use(generalLimiter);
