@@ -56,7 +56,7 @@ const app = express();
 connectDB();
 
 app.use(cors({
-  origin: ['https://vocabinet.netlify.app']
+  origin: ['https://vocabinet.netlify.app', 'https://allisons-language-app.netlify.app']
 }));
 app.use(express.json());
 app.use(fileUpload());
@@ -82,6 +82,11 @@ const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
 
 // Admin routes
 app.use('/api/admin', adminRoutes);
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
 
 // Upload file to Google Cloud Storage
 app.post('/api/upload', async (req, res) => {
