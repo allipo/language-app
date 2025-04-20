@@ -9,6 +9,7 @@ const adminSchema = new mongoose.Schema({
     trim: true,
     minlength: 3,
     maxlength: 30,
+    index: true,
     validate: {
       validator: function(v) {
         return /^[a-zA-Z0-9_]+$/.test(v);

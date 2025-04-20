@@ -19,7 +19,8 @@ router.use(adminLimiter);
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const admin = await Admin.findOne({ username });
+    // Optimize query by only selecting needed fields
+    const admin = await Admin.findOne({ username }).select('+password');
     
     if (!admin || !(await admin.checkPassword(password))) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -31,7 +32,8 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign({ id: admin._id }, process.env.SERVER_JWT_SECRET, { expiresIn: '24h' });
     res.json({ token, admin: { username: admin.username, role: admin.role } });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    console.error('Login error:', err);
+    res.status(500).json({ message: 'Internal server error' });
   }
 });
 
