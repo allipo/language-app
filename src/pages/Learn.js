@@ -29,15 +29,22 @@ function Learn() {
   };
 
   useEffect(() => {
+    console.log('Learn page mounted/selectedLanguage changed:', selectedLanguage);
     fetchGroups();
   }, [selectedLanguage]);
 
   const fetchGroups = async () => {
     try {
+      console.log('Fetching groups...');
       const response = await getGroupNames();
       const data = await response;
+      console.log('Raw API response:', data);
+      
       // Filter groups by selected language
       const filteredGroups = data.groups.filter(group => group.language === selectedLanguage.code);
+      console.log('Filtered groups:', filteredGroups);
+      console.log('Selected language code:', selectedLanguage.code);
+      
       setGroups(filteredGroups);
     } catch (err) {
       console.error('Error fetching groups:', err);
