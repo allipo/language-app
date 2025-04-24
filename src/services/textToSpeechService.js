@@ -8,6 +8,7 @@ class TextToSpeechService {
         this.synthesis = window.speechSynthesis;
         this.utterance = null;
         this.voiceLoadTimeout = null;
+        this.isSpeaking = false;
     }
 
     getVoiceForLanguage(lang, gender) {
@@ -38,6 +39,7 @@ class TextToSpeechService {
 
             // Create new utterance
             this.utterance = new SpeechSynthesisUtterance(text);
+            this.isSpeaking = true;
 
             // Set default options
             this.utterance.rate = options.rate || 1;
@@ -48,6 +50,12 @@ class TextToSpeechService {
             // Set up error handling
             this.utterance.onerror = (event) => {
                 console.error('Speech synthesis error:', event);
+                this.isSpeaking = false;
+                if (onEnd) onEnd();
+            };
+
+            this.utterance.onend = () => {
+                this.isSpeaking = false;
                 if (onEnd) onEnd();
             };
 
@@ -70,12 +78,9 @@ class TextToSpeechService {
                 if (voice) this.utterance.voice = voice;
                 this.synthesis.speak(this.utterance);
             }
-
-            if (onEnd) {
-                this.utterance.onend = onEnd;
-            }
         } catch (error) {
             console.error('Error in speech synthesis:', error);
+            this.isSpeaking = false;
             if (onEnd) onEnd();
         }
     }
@@ -83,6 +88,7 @@ class TextToSpeechService {
     stop() {
         if (this.synthesis) {
             this.synthesis.cancel();
+            this.isSpeaking = false;
             if (this.voiceLoadTimeout) {
                 clearTimeout(this.voiceLoadTimeout);
                 this.voiceLoadTimeout = null;
@@ -91,7 +97,7 @@ class TextToSpeechService {
     }
 
     pause() {
-        if (this.synthesis) {
+        if (this.synthesis && this.isSpeaking) {
             this.synthesis.pause();
         }
     }
