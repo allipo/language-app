@@ -34,6 +34,7 @@ class TextToSpeechService {
 
     speak(text, options = {}, onEnd, onError) {
         try {
+            console.log('Starting speech synthesis for:', text);
             // Cancel any ongoing speech
             this.stop();
 
@@ -49,14 +50,13 @@ class TextToSpeechService {
 
             // Set up error handling
             this.utterance.onerror = (event) => {
-                console.error('Speech synthesis error:', event);
-                this.isSpeaking = false;
-                if (onError) onError(event);
-                if (onEnd) onEnd();
-            };
-
-            this.utterance.onend = () => {
-                this.isSpeaking = false;
+                console.log('Speech synthesis error:', event);
+                // Ignore 'interrupted' errors as they're expected when stopping speech
+                if (event.error !== 'interrupted') {
+                    console.error('Speech synthesis error:', event);
+                    this.isSpeaking = false;
+                    if (onError) onError(event);
+                }
                 if (onEnd) onEnd();
             };
 
@@ -69,32 +69,41 @@ class TextToSpeechService {
                 }
             }, 5000);
 
+            // Single consolidated onend handler
+            this.utterance.onend = () => {
+                console.log('Speech synthesis ended');
+                clearTimeout(fallbackTimeout);
+                this.isSpeaking = false;
+                if (onEnd) onEnd();
+            };
+
             // Load voices if not already loaded
-            if (this.synthesis.getVoices().length === 0) {
+            const voices = this.synthesis.getVoices();
+            console.log('Available voices:', voices.length);
+            
+            if (voices.length === 0) {
+                console.log('No voices loaded, waiting for voiceschanged event');
                 // Set a timeout in case voices never load
                 this.voiceLoadTimeout = setTimeout(() => {
                     console.warn('Voice loading timed out, proceeding with default voice');
+                    const voice = this.getVoiceForLanguage(options.lang, options.voicePreference);
+                    if (voice) this.utterance.voice = voice;
                     this.synthesis.speak(this.utterance);
                 }, 5000);
 
                 this.synthesis.onvoiceschanged = () => {
+                    console.log('Voices changed event fired');
                     clearTimeout(this.voiceLoadTimeout);
                     const voice = this.getVoiceForLanguage(options.lang, options.voicePreference);
                     if (voice) this.utterance.voice = voice;
                     this.synthesis.speak(this.utterance);
                 };
             } else {
+                console.log('Voices already loaded, proceeding with speech');
                 const voice = this.getVoiceForLanguage(options.lang, options.voicePreference);
                 if (voice) this.utterance.voice = voice;
                 this.synthesis.speak(this.utterance);
             }
-
-            // Clear fallback timeout when speech ends
-            this.utterance.onend = () => {
-                clearTimeout(fallbackTimeout);
-                this.isSpeaking = false;
-                if (onEnd) onEnd();
-            };
         } catch (error) {
             console.error('Error in speech synthesis:', error);
             this.isSpeaking = false;

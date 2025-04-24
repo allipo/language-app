@@ -59,7 +59,7 @@ function Listen() {
       } else if (currentWordIndex < groupWords.length) {
         const currentWord = groupWords[currentWordIndex];
         const wordWithArticle = currentWord.article ? `${currentWord.article} ${currentWord.word}` : currentWord.word;
-        const textToSpeak = selectedLanguage.code === 'ja' && currentWord.kana ? currentWord.kana : wordWithArticle;
+        const wordToSpeak = selectedLanguage.code === 'ja' && currentWord.kana ? currentWord.kana : wordWithArticle;
         
         // Add a fallback timeout in case the speech synthesis fails
         const fallbackTimeout = setTimeout(() => {
@@ -67,9 +67,9 @@ function Listen() {
           if (isPlaying) {
             setCurrentWordIndex(prev => prev + 1);
           }
-        }, 3000); // 3 second fallback
+        }, 2000); // 2 second fallback
 
-        tts.speak(textToSpeak, { 
+        tts.speak(wordToSpeak, { 
           lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
           voicePreference: voicePreference
         }, () => {
