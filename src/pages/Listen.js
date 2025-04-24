@@ -61,19 +61,10 @@ function Listen() {
         const wordWithArticle = currentWord.article ? `${currentWord.article} ${currentWord.word}` : currentWord.word;
         const wordToSpeak = selectedLanguage.code === 'ja' && currentWord.kana ? currentWord.kana : wordWithArticle;
         
-        // Add a fallback timeout in case the speech synthesis fails
-        const fallbackTimeout = setTimeout(() => {
-          console.warn('Speech synthesis timed out, forcing progression');
-          if (isPlaying) {
-            setCurrentWordIndex(prev => prev + 1);
-          }
-        }, 2000); // 2 second fallback
-
         tts.speak(wordToSpeak, { 
           lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
           voicePreference: voicePreference
         }, () => {
-          clearTimeout(fallbackTimeout);
           if (isPlaying) {
             setTimeout(() => {
               setCurrentWordIndex(prev => prev + 1);
@@ -81,12 +72,7 @@ function Listen() {
           }
         }, (error) => {
           console.error('Error speaking word:', error);
-          clearTimeout(fallbackTimeout);
-          if (isPlaying) {
-            setTimeout(() => {
-              setCurrentWordIndex(prev => prev + 1);
-            }, 600);
-          }
+          // Don't progress on error
         });
       }
     } else {

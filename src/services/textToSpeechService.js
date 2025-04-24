@@ -83,17 +83,8 @@ class TextToSpeechService {
             
             if (voices.length === 0) {
                 console.log('No voices loaded, waiting for voiceschanged event');
-                // Set a timeout in case voices never load
-                this.voiceLoadTimeout = setTimeout(() => {
-                    console.warn('Voice loading timed out, proceeding with default voice');
-                    const voice = this.getVoiceForLanguage(options.lang, options.voicePreference);
-                    if (voice) this.utterance.voice = voice;
-                    this.synthesis.speak(this.utterance);
-                }, 5000);
-
                 this.synthesis.onvoiceschanged = () => {
                     console.log('Voices changed event fired');
-                    clearTimeout(this.voiceLoadTimeout);
                     const voice = this.getVoiceForLanguage(options.lang, options.voicePreference);
                     if (voice) this.utterance.voice = voice;
                     this.synthesis.speak(this.utterance);
