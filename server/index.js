@@ -53,10 +53,14 @@ const storage = new Storage({
 const bucket = storage.bucket(process.env.SERVER_GOOGLE_CLOUD_BUCKET_NAME);
 
 const app = express();
+app.set('trust proxy', 1);
 connectDB();
 
 app.use(cors({
-  origin: ['https://vocabinet.netlify.app', 'https://allisons-language-app.netlify.app']
+  origin: [
+    'https://vocabinet.netlify.app', 
+    'https://allisons-language-app.netlify.app'
+  ]
 }));
 app.use(express.json());
 app.use(fileUpload());

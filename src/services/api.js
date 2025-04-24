@@ -1,4 +1,4 @@
-const API_URL = process.env.REACT_APP_API_URL || 'https://allisons-language-app.uc.r.appspot.com/api';
+const API_URL = process.env.REACT_APP_API_URL || 'https://allisons-language-app.de.r.appspot.com/api';
 console.log('API URL:', API_URL, 'Env var:', process.env.REACT_APP_API_URL);
 
 const getAuthHeaders = () => {
