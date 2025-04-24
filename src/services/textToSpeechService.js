@@ -83,10 +83,9 @@ class TextToSpeechService {
 
             // Add a check for speech completion
             const checkCompletion = () => {
-                if (this.synthesis.speaking === false) {
+                if (this.synthesis.speaking === false && this.isSpeaking) {
                     this.isSpeaking = false;
                     if (onEnd) onEnd();
-                    clearInterval(this.completionCheckInterval);
                 }
             };
             
