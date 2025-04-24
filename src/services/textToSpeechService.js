@@ -78,13 +78,19 @@ class TextToSpeechService {
 
             this.utterance.onend = () => {
                 this.isSpeaking = false;
+                if (this.completionCheckInterval) {
+                    clearInterval(this.completionCheckInterval);
+                }
                 if (onEnd) onEnd();
             };
 
             // Add a check for speech completion
             const checkCompletion = () => {
-                if (this.synthesis.speaking === false && this.isSpeaking) {
+                if (!this.synthesis.speaking && this.isSpeaking) {
                     this.isSpeaking = false;
+                    if (this.completionCheckInterval) {
+                        clearInterval(this.completionCheckInterval);
+                    }
                     if (onEnd) onEnd();
                 }
             };
@@ -101,6 +107,9 @@ class TextToSpeechService {
         } catch (error) {
             console.error('Error in speech synthesis:', error);
             this.isSpeaking = false;
+            if (this.completionCheckInterval) {
+                clearInterval(this.completionCheckInterval);
+            }
             if (onError) onError(error);
             if (onEnd) onEnd();
         }
