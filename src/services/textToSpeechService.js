@@ -7,11 +7,20 @@ class TextToSpeechService {
         }
         this.synthesis = window.speechSynthesis;
         this.utterance = null;
-        this.voiceLoadTimeout = null;
         this.isSpeaking = false;
         this.cachedVoice = null;
         this.cachedLang = null;
         this.cachedPreference = null;
+        this.voicesLoaded = false;
+        
+        // Load voices once
+        if (this.synthesis.getVoices().length === 0) {
+            this.synthesis.onvoiceschanged = () => {
+                this.voicesLoaded = true;
+            };
+        } else {
+            this.voicesLoaded = true;
+        }
     }
 
     getVoiceForLanguage(lang, gender) {
@@ -31,13 +40,12 @@ class TextToSpeechService {
                 voiceName.includes('male') || voiceName.includes('man') || voiceName.includes('boy');
         });
         
-        // If no preferred gender voice found, return first available voice for the language
         return preferredVoices.length > 0 ? preferredVoices[0] : languageVoices[0];
     }
 
     updateVoice(lang, preference) {
-        // Only update if language or preference changed
-        if (lang !== this.cachedLang || preference !== this.cachedPreference) {
+        // Only update if language, preference, or voices haven't been loaded yet
+        if (lang !== this.cachedLang || preference !== this.cachedPreference || !this.voicesLoaded) {
             this.cachedLang = lang;
             this.cachedPreference = preference;
             this.cachedVoice = this.getVoiceForLanguage(lang, preference);
@@ -47,7 +55,6 @@ class TextToSpeechService {
 
     speak(text, options = {}, onEnd, onError) {
         try {
-            console.log('Starting speech synthesis for:', text);
             // Cancel any ongoing speech
             this.stop();
 
@@ -63,8 +70,6 @@ class TextToSpeechService {
 
             // Set up error handling
             this.utterance.onerror = (event) => {
-                console.log('Speech synthesis error:', event);
-                // Ignore 'interrupted' errors as they're expected when stopping speech
                 if (event.error !== 'interrupted') {
                     console.error('Speech synthesis error:', event);
                     this.isSpeaking = false;
@@ -73,31 +78,17 @@ class TextToSpeechService {
                 if (onEnd) onEnd();
             };
 
-            // Single consolidated onend handler
             this.utterance.onend = () => {
-                console.log('Speech synthesis ended');
                 this.isSpeaking = false;
                 if (onEnd) onEnd();
             };
 
-            // Load voices if not already loaded
-            const voices = this.synthesis.getVoices();
-            console.log('Available voices:', voices.length);
+            // Get or update voice
+            const voice = this.updateVoice(options.lang, options.voicePreference);
+            if (voice) this.utterance.voice = voice;
             
-            if (voices.length === 0) {
-                console.log('No voices loaded, waiting for voiceschanged event');
-                this.synthesis.onvoiceschanged = () => {
-                    console.log('Voices changed event fired');
-                    const voice = this.updateVoice(options.lang, options.voicePreference);
-                    if (voice) this.utterance.voice = voice;
-                    this.synthesis.speak(this.utterance);
-                };
-            } else {
-                console.log('Voices already loaded, proceeding with speech');
-                const voice = this.updateVoice(options.lang, options.voicePreference);
-                if (voice) this.utterance.voice = voice;
-                this.synthesis.speak(this.utterance);
-            }
+            // Speak
+            this.synthesis.speak(this.utterance);
         } catch (error) {
             console.error('Error in speech synthesis:', error);
             this.isSpeaking = false;
@@ -110,10 +101,6 @@ class TextToSpeechService {
         if (this.synthesis) {
             this.synthesis.cancel();
             this.isSpeaking = false;
-            if (this.voiceLoadTimeout) {
-                clearTimeout(this.voiceLoadTimeout);
-                this.voiceLoadTimeout = null;
-            }
         }
     }
 
