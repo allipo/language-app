@@ -32,7 +32,7 @@ class TextToSpeechService {
         return preferredVoices.length > 0 ? preferredVoices[0] : languageVoices[0];
     }
 
-    speak(text, options = {}, onEnd) {
+    speak(text, options = {}, onEnd, onError) {
         try {
             // Cancel any ongoing speech
             this.stop();
@@ -51,6 +51,7 @@ class TextToSpeechService {
             this.utterance.onerror = (event) => {
                 console.error('Speech synthesis error:', event);
                 this.isSpeaking = false;
+                if (onError) onError(event);
                 if (onEnd) onEnd();
             };
 
@@ -58,6 +59,15 @@ class TextToSpeechService {
                 this.isSpeaking = false;
                 if (onEnd) onEnd();
             };
+
+            // Add a fallback timeout in case speech synthesis fails
+            const fallbackTimeout = setTimeout(() => {
+                if (this.isSpeaking) {
+                    console.warn('Speech synthesis timed out, forcing end');
+                    this.isSpeaking = false;
+                    if (onEnd) onEnd();
+                }
+            }, 5000);
 
             // Load voices if not already loaded
             if (this.synthesis.getVoices().length === 0) {
@@ -78,9 +88,17 @@ class TextToSpeechService {
                 if (voice) this.utterance.voice = voice;
                 this.synthesis.speak(this.utterance);
             }
+
+            // Clear fallback timeout when speech ends
+            this.utterance.onend = () => {
+                clearTimeout(fallbackTimeout);
+                this.isSpeaking = false;
+                if (onEnd) onEnd();
+            };
         } catch (error) {
             console.error('Error in speech synthesis:', error);
             this.isSpeaking = false;
+            if (onError) onError(error);
             if (onEnd) onEnd();
         }
     }
