@@ -70,11 +70,9 @@ class TextToSpeechService {
 
             // Set up error handling
             this.utterance.onerror = (event) => {
-                if (event.error !== 'interrupted') {
-                    console.error('Speech synthesis error:', event);
-                    this.isSpeaking = false;
-                    if (onError) onError(event);
-                }
+                console.error('Speech synthesis error:', event);
+                this.isSpeaking = false;
+                if (onError) onError(event);
                 if (onEnd) onEnd();
             };
 
@@ -82,6 +80,17 @@ class TextToSpeechService {
                 this.isSpeaking = false;
                 if (onEnd) onEnd();
             };
+
+            // Add a check for speech completion
+            const checkCompletion = () => {
+                if (this.synthesis.speaking === false && this.isSpeaking) {
+                    this.isSpeaking = false;
+                    if (onEnd) onEnd();
+                }
+            };
+            
+            // Check every 100ms if speech is still going
+            this.completionCheckInterval = setInterval(checkCompletion, 100);
 
             // Get or update voice
             const voice = this.updateVoice(options.lang, options.voicePreference);
@@ -101,6 +110,9 @@ class TextToSpeechService {
         if (this.synthesis) {
             this.synthesis.cancel();
             this.isSpeaking = false;
+            if (this.completionCheckInterval) {
+                clearInterval(this.completionCheckInterval);
+            }
         }
     }
 
