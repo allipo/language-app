@@ -9,6 +9,9 @@ class TextToSpeechService {
         this.utterance = null;
         this.voiceLoadTimeout = null;
         this.isSpeaking = false;
+        this.cachedVoice = null;
+        this.cachedLang = null;
+        this.cachedPreference = null;
     }
 
     getVoiceForLanguage(lang, gender) {
@@ -30,6 +33,16 @@ class TextToSpeechService {
         
         // If no preferred gender voice found, return first available voice for the language
         return preferredVoices.length > 0 ? preferredVoices[0] : languageVoices[0];
+    }
+
+    updateVoice(lang, preference) {
+        // Only update if language or preference changed
+        if (lang !== this.cachedLang || preference !== this.cachedPreference) {
+            this.cachedLang = lang;
+            this.cachedPreference = preference;
+            this.cachedVoice = this.getVoiceForLanguage(lang, preference);
+        }
+        return this.cachedVoice;
     }
 
     speak(text, options = {}, onEnd, onError) {
@@ -60,19 +73,9 @@ class TextToSpeechService {
                 if (onEnd) onEnd();
             };
 
-            // Add a fallback timeout in case speech synthesis fails
-            const fallbackTimeout = setTimeout(() => {
-                if (this.isSpeaking) {
-                    console.warn('Speech synthesis timed out, forcing end');
-                    this.isSpeaking = false;
-                    if (onEnd) onEnd();
-                }
-            }, 5000);
-
             // Single consolidated onend handler
             this.utterance.onend = () => {
                 console.log('Speech synthesis ended');
-                clearTimeout(fallbackTimeout);
                 this.isSpeaking = false;
                 if (onEnd) onEnd();
             };
@@ -85,13 +88,13 @@ class TextToSpeechService {
                 console.log('No voices loaded, waiting for voiceschanged event');
                 this.synthesis.onvoiceschanged = () => {
                     console.log('Voices changed event fired');
-                    const voice = this.getVoiceForLanguage(options.lang, options.voicePreference);
+                    const voice = this.updateVoice(options.lang, options.voicePreference);
                     if (voice) this.utterance.voice = voice;
                     this.synthesis.speak(this.utterance);
                 };
             } else {
                 console.log('Voices already loaded, proceeding with speech');
-                const voice = this.getVoiceForLanguage(options.lang, options.voicePreference);
+                const voice = this.updateVoice(options.lang, options.voicePreference);
                 if (voice) this.utterance.voice = voice;
                 this.synthesis.speak(this.utterance);
             }
