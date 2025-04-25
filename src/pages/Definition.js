@@ -70,15 +70,12 @@ function Definition() {
     if (word && (beginnerMode ? word.translatedDefinition === definition : word.definition === definition)) {
       setMatches(prev => ({ ...prev, [definitionIndex]: wordId }));
       
-      // Only speak in non-beginner mode
-      if (!beginnerMode) {
-        const textToSpeak = selectedLanguage.code === 'ja' && word.kana ? word.kana : word.word;
-        const combinedText = `${textToSpeak}. ${definition}`;
-        tts.speak(combinedText, { 
-          lang: selectedLanguage.code,
-          voicePreference: voicePreference
-        });
-      }
+      const textToSpeak = selectedLanguage.code === 'ja' && word.kana ? word.kana : word.word;
+      const combinedText = `${textToSpeak}. ${word.definition}`;
+      tts.speak(combinedText, { 
+        lang: selectedLanguage.code,
+        voicePreference: voicePreference
+      });
     }
   };
 
@@ -112,15 +109,12 @@ function Definition() {
     if ((beginnerMode ? selectedWord.translatedDefinition === definition : selectedWord.definition === definition)) {
       setMatches(prev => ({ ...prev, [definitionIndex]: selectedWord._id }));
       
-      // Only speak in non-beginner mode
-      if (!beginnerMode) {
-        const textToSpeak = selectedLanguage.code === 'ja' && selectedWord.kana ? selectedWord.kana : selectedWord.word;
-        const combinedText = `${textToSpeak}. ${definition}`;
-        tts.speak(combinedText, { 
-          lang: selectedLanguage.code,
-          voicePreference: voicePreference
-        });
-      }
+      const textToSpeak = selectedLanguage.code === 'ja' && selectedWord.kana ? selectedWord.kana : selectedWord.word;
+      const combinedText = `${textToSpeak}. ${selectedWord.definition}`;
+      tts.speak(combinedText, { 
+        lang: selectedLanguage.code,
+        voicePreference: voicePreference
+      });
     }
     setSelectedWord(null);
   };
