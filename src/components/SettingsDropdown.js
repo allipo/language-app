@@ -5,7 +5,7 @@ import './DropdownMenu.css';
 
 function SettingsDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const { beginnerMode, setBeginnerMode, voicePreference, setVoicePreference } = useLanguage();
+  const { beginnerMode, setBeginnerMode, voicePreference, setVoicePreference, speechRecognition, setSpeechRecognition } = useLanguage();
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -28,12 +28,15 @@ function SettingsDropdown() {
       setBeginnerMode(!beginnerMode);
     } else if (setting === 'voicePreference') {
       setVoicePreference(voicePreference === 'Female' ? 'Male' : 'Female');
+    } else if (setting === 'speechRecognition') {
+      setSpeechRecognition(!speechRecognition);
     }
   };
 
   const menuItems = [
     { label: 'Beginner Mode', setting: 'beginnerMode', value: beginnerMode },
-    { label: 'Voice', setting: 'voicePreference', value: voicePreference === 'Male' }
+    { label: 'Voice', setting: 'voicePreference', value: voicePreference === 'Male' },
+    { label: 'Speech Recognition', setting: 'speechRecognition', value: speechRecognition }
   ];
 
   return (
