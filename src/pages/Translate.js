@@ -52,12 +52,9 @@ function Translate() {
     if (scrambled.length > index) {
       const correctSentence = scrambled[index].sentence;
       const otherSentences = scrambled.filter((_, i) => i !== index).map(word => word.sentence);
-      const randomSentences = otherSentences
-        .sort(() => Math.random() - 0.5)
-        .slice(0, 2);
+      const randomSentences = otherSentences.slice(0, 2);
       
-      const options = [correctSentence, ...randomSentences]
-        .sort(() => Math.random() - 0.5);
+      const options = [correctSentence, ...randomSentences];
       
       setSentenceOptions(options);
       setUserInput('');
@@ -185,10 +182,13 @@ function Translate() {
   const handleOptionClick = (sentence) => {
     if (sentence === scrambledWords[currentIndex].sentence) {
       const duration = estimateSpeechDuration(sentence);
+      let hasMovedToNext = false;
       
       // Set backup timer
       const backupTimer = setTimeout(() => {
-        moveToNextSentence();
+        if (!hasMovedToNext) {
+          moveToNextSentence();
+        }
       }, duration + 1000); // Add 1 second buffer
       
       ttsService.speak(sentence, { 
@@ -196,7 +196,10 @@ function Translate() {
         voicePreference: voicePreference
       }, () => {
         clearTimeout(backupTimer);
-        moveToNextSentence();
+        if (!hasMovedToNext) {
+          hasMovedToNext = true;
+          moveToNextSentence();
+        }
       });
       setShowIncorrectMessage(false);
     } else {
