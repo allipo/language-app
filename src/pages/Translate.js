@@ -192,13 +192,17 @@ function Translate() {
               <p className="translated-sentence">{scrambledWords[currentIndex].translatedSentence}</p>
               
               <div className="speaking-section">
-                <button
-                  onClick={handleStartListening}
-                  className="speak-button"
-                  disabled={isListening}
-                >
-                  {isListening ? '...' : speechRecognition ? 'Speak Translation' : 'Say and select translation'}
-                </button>
+                {speechRecognition ? (
+                  <button
+                    onClick={handleStartListening}
+                    className="speak-button"
+                    disabled={isListening}
+                  >
+                    {isListening ? '...' : 'Speak Translation'}
+                  </button>
+                ) : (
+                  <p className="speak-text">Say and select translation</p>
+                )}
                 
                 <p className="user-input">
                   {userInput ? `You said: ${userInput}` : ''}
