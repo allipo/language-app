@@ -55,12 +55,6 @@ function Translate() {
       const randomSentences = otherSentences.slice(0, 2);
       
       const options = [correctSentence, ...randomSentences];
-      // Shuffle the options array
-      for (let i = options.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [options[i], options[j]] = [options[j], options[i]];
-      }
-      
       setSentenceOptions(options);
       setUserInput('');
       setMatchedSentence(null);
@@ -155,7 +149,7 @@ function Translate() {
             // Set backup timer
             const backupTimer = setTimeout(() => {
               moveToNextSentence();
-            }, duration + 1000); // Add 1 second buffer
+            }, duration + 2500); // Add 2 second buffer
             
             ttsService.speak(sentence, { 
               lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
@@ -194,7 +188,7 @@ function Translate() {
         if (!hasMovedToNext) {
           moveToNextSentence();
         }
-      }, duration + 1000); // Add 1 second buffer
+      }, duration + 2000); // Add 2 second buffer
       
       ttsService.speak(sentence, { 
         lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
