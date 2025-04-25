@@ -9,11 +9,11 @@ import './Speak.css';
 
 function Speak() {
   const { groupWords, wordImageUrls, selectedGroup } = useGroup();
-  const { selectedLanguage, beginnerMode, voicePreference } = useLanguage();
+  const { selectedLanguage, beginnerMode, voicePreference, speechRecognition } = useLanguage();
   const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const currentWord = groupWords[currentWordIndex];
   const textToSpeech = new TextToSpeechService();
-  const speechRecognition = new SpeechRecognitionService();
+  const speechRecognitionService = new SpeechRecognitionService();
   const [showSpeakButton, setShowSpeakButton] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [isPluralMode, setIsPluralMode] = useState(false);
@@ -106,8 +106,8 @@ function Speak() {
   }, [currentWord, selectedLanguage, isPluralMode, voicePreference]);
 
   const handleSpeakClick = () => {
-    speechRecognition.setLanguage(selectedLanguage.code);
-    speechRecognition.startListening(
+    speechRecognitionService.setLanguage(selectedLanguage.code);
+    speechRecognitionService.startListening(
       (text) => {
         setRecognizedSpeech(text);
         const expectedText = isPluralMode && currentWord.plural 
@@ -189,9 +189,13 @@ function Speak() {
             )}
             {showSpeakButton && (
               <div className="speak-page-button-container">
-                <button className="speak-page-button" onClick={handleSpeakClick}>
-                  Speak
-                </button>
+                {speechRecognition ? (
+                  <button className="speak-page-button" onClick={handleSpeakClick}>
+                    Speak
+                  </button>
+                ) : (
+                  <span className="repeat-text">Repeat</span>
+                )}
                 {recognizedSpeech && (
                   <p className="recognized-speech">You said: {recognizedSpeech}</p>
                 )}

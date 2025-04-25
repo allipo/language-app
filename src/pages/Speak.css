@@ -124,3 +124,9 @@
   font-style: italic;
 }
 
+.repeat-text {
+  font-size: 1.2rem;
+  color: #666;
+  margin: 10px 0;
+}
+
