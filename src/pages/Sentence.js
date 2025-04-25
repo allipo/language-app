@@ -18,12 +18,42 @@ function Sentence() {
   const [isComplete, setIsComplete] = useState(false);
   const ttsService = useRef(new TextToSpeechService());
   const inputRef = useRef(null);
+  const backupTimerRef = useRef(null);
+
+  // Constants for timing calculation
+  const CHARS_PER_SECOND = 5; // Average speaking rate
+  const MIN_DURATION = 2000; // Minimum duration in ms
+  const MAX_DURATION = 8000; // Maximum duration in ms
+
+  const calculateDuration = (text) => {
+    const charCount = text.length;
+    const estimatedMs = (charCount / CHARS_PER_SECOND) * 1000;
+    return Math.min(Math.max(estimatedMs, MIN_DURATION), MAX_DURATION);
+  };
+
+  const clearBackupTimer = () => {
+    if (backupTimerRef.current) {
+      clearTimeout(backupTimerRef.current);
+      backupTimerRef.current = null;
+    }
+  };
+
+  const moveToNextSentence = () => {
+    clearBackupTimer();
+    if (currentIndex === scrambledWords.length - 1) {
+      setIsComplete(true);
+    } else {
+      setCurrentIndex(prev => prev + 1);
+      setInput('');
+    }
+  };
 
   useEffect(() => {
     setScrambledWords(scrambleWords(groupWords));
     setCurrentIndex(0);
     setInput('');
     setIsComplete(false);
+    return () => clearBackupTimer();
   }, [groupWords]);
 
   useEffect(() => {
@@ -36,6 +66,11 @@ function Sentence() {
       // For Japanese, use a pause instead of "what"
       const whatWord = selectedLanguage.code === 'ja' ? '...' : languageWords[selectedLanguage.code];
       const fullSentence = `${parts[0]} ${whatWord} ${parts[1]}`;
+      
+      // Calculate duration and set backup timer
+      const duration = calculateDuration(fullSentence);
+      backupTimerRef.current = setTimeout(moveToNextSentence, duration);
+
       ttsService.current.speak(fullSentence, { 
         rate: 1,
         pitch: 1,
@@ -50,7 +85,7 @@ function Sentence() {
             event.utterance.pitch = 1;
           }
         }
-      });
+      }, moveToNextSentence);
     }
   }, [currentIndex, scrambledWords, selectedLanguage.code, voicePreference]);
 
