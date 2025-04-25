@@ -4,21 +4,19 @@
   padding: 0px 20px 20px;
 }
 
-.group-name-card {
+.play-button-container {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: rgba(255, 255, 255, 0.5);
-  padding: 15px 30px;
-  border-radius: 8px;
+  padding: 20px;
+  border-radius: 50%;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 15px;
-  min-width: 200px;
 }
 
 .group-info {
@@ -50,25 +48,31 @@
   transform: scale(1.1);
 }
 
+.done-button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s;
+}
+
+.done-button:hover {
+  background-color: #45a049;
+}
+
 /* Mobile styles */
 @media (max-width: 768px) {
   .listen-page {
     padding: 0px 10px 10px;
   }
 
-  .group-name-card {
-    padding: 10px 15px;
-    gap: 8px;
-    width: 50%;
-    max-width: 250px;
-    justify-content: center;
-    min-height: 50px;
-  }
-
-  .group-name-card h1 {
-    font-size: 1.4rem;
-    text-align: center;
-    margin: 0;
+  .play-button-container {
+    padding: 25px;
+    background-color: rgba(255, 255, 255, 0.8);
   }
 
   .group-info {
@@ -82,8 +86,20 @@
   }
 
   .play-icon {
-    width: 28px;
-    height: 28px;
+    width: 40px;
+    height: 40px;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .play-button-container {
+    padding: 20px;
+  }
+
+  .play-icon {
+    width: 35px;
+    height: 35px;
   }
 }
 

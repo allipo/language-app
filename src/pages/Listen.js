@@ -13,8 +13,10 @@ function Listen() {
   const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [shouldTransition, setShouldTransition] = useState(false);
   const [hideContent, setHideContent] = useState(false);
+  const [showDoneButton, setShowDoneButton] = useState(false);
   const tts = new TextToSpeechService();
   const backgroundAudioRef = useRef(null);
+  const doneButtonTimeoutRef = useRef(null);
 
   useEffect(() => {
     if (selectedGroup?.backgroundSound) {
@@ -36,43 +38,27 @@ function Listen() {
         backgroundAudioRef.current.play();
       }
       if (currentWordIndex === -1) {
-        const speakGroupName = () => {
-          tts.speak(selectedGroup.name, { 
-            lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
-            voicePreference: voicePreference
-          }, () => {
-            if (isPlaying) {
-              setTimeout(() => {
-                setCurrentWordIndex(0);
-              }, 600);
-            }
-          }, (error) => {
-            console.error('Error speaking group name:', error);
-            if (isPlaying) {
-              setTimeout(() => {
-                setCurrentWordIndex(0);
-              }, 600);
-            }
-          });
-        };
-        speakGroupName();
-      } else if (currentWordIndex < groupWords.length) {
-        const currentWord = groupWords[currentWordIndex];
-        const wordWithArticle = currentWord.article ? `${currentWord.article} ${currentWord.word}` : currentWord.word;
-        const wordToSpeak = selectedLanguage.code === 'ja' && currentWord.kana ? currentWord.kana : wordWithArticle;
+        // Create a single string with group name and all words
+        const allWords = groupWords.map(word => {
+          const wordWithArticle = word.article ? `${word.article} ${word.word}` : word.word;
+          return selectedLanguage.code === 'ja' && word.kana ? word.kana : wordWithArticle;
+        }).join(', ');
         
-        tts.speak(wordToSpeak, { 
+        const fullText = `${selectedGroup.name}. ${allWords}`;
+        
+        tts.speak(fullText, { 
           lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
-          voicePreference: voicePreference
+          voicePreference: voicePreference,
+          rate: 0.7 // Slow down the speech rate
         }, () => {
-          if (isPlaying) {
-            setTimeout(() => {
-              setCurrentWordIndex(prev => prev + 1);
-            }, 600);
-          }
+          setIsPlaying(false);
+          setHideContent(true);
+          setTimeout(() => {
+            setShouldTransition(true);
+          }, 500);
         }, (error) => {
-          console.error('Error speaking word:', error);
-          // Don't progress on error
+          console.error('Error speaking text:', error);
+          setIsPlaying(false);
         });
       }
     } else {
@@ -84,14 +70,31 @@ function Listen() {
   }, [isPlaying, currentWordIndex, selectedLanguage]);
 
   useEffect(() => {
-    if (currentWordIndex >= groupWords.length) {
-      setIsPlaying(false);
-      setHideContent(true);
-      setTimeout(() => {
-        setShouldTransition(true);
-      }, 500);
+    if (isPlaying) {
+      setShowDoneButton(false);
+      doneButtonTimeoutRef.current = setTimeout(() => {
+        setShowDoneButton(true);
+      }, 5000);
+    } else {
+      if (doneButtonTimeoutRef.current) {
+        clearTimeout(doneButtonTimeoutRef.current);
+      }
+      setShowDoneButton(false);
     }
-  }, [currentWordIndex, groupWords.length]);
+    return () => {
+      if (doneButtonTimeoutRef.current) {
+        clearTimeout(doneButtonTimeoutRef.current);
+      }
+    };
+  }, [isPlaying]);
+
+  const handleDoneClick = () => {
+    setIsPlaying(false);
+    setHideContent(true);
+    setTimeout(() => {
+      setShouldTransition(true);
+    }, 500);
+  };
 
   if (!selectedGroup) {
     return (
@@ -108,20 +111,21 @@ function Listen() {
         <div className="listen-page">
           <div className="group-info">
             {!hideContent && (
-              <div className="group-name-card">
-                <h1>
-                  {currentWordIndex >= 0 && currentWordIndex < groupWords.length 
-                    ? (groupWords[currentWordIndex].article 
-                        ? `${groupWords[currentWordIndex].article} ${groupWords[currentWordIndex].word}`
-                        : groupWords[currentWordIndex].word)
-                    : selectedGroup.name}
-                </h1>
+              <div className="play-button-container">
                 <img 
                   src={isPlaying ? "/icons/pause-icon.svg" : "/icons/play-icon.svg"}
                   alt={isPlaying ? "Pause" : "Play"} 
                   className="play-icon"
                   onClick={() => setIsPlaying(!isPlaying)}
                 />
+                {showDoneButton && (
+                  <button 
+                    className="done-button"
+                    onClick={handleDoneClick}
+                  >
+                    Done
+                  </button>
+                )}
               </div>
             )}
             <img 
