@@ -104,10 +104,11 @@ function Reinforce() {
       : currentWord.article 
         ? `${currentWord.article} ${currentWord.word}` 
         : currentWord.word;
-    tts.speak(textToSpeak, { lang: selectedLanguage.code }, () => {
+    tts.speak(textToSpeak, { lang: selectedLanguage.code });
+    setTimeout(() => {
       setSelectedButton(null);
       handleNext();
-    });
+    }, 1500);
   };
 
   if (!groupWords.length) {
