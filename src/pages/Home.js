@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import './Home.css';
 
 function Home() {
-  const { selectedLanguage, setSelectedLanguage, availableLanguages, beginnerMode, setBeginnerMode, voicePreference, setVoicePreference } = useLanguage();
+  const { selectedLanguage, setSelectedLanguage, availableLanguages, beginnerMode, setBeginnerMode, voicePreference, setVoicePreference, speechRecognition, setSpeechRecognition } = useLanguage();
 
   return (
     <div>
@@ -46,6 +46,17 @@ function Home() {
         >
           <option value="Female">Female</option>
           <option value="Male">Male</option>
+        </select>
+      </div>
+      <div className="language-selector">
+        <label htmlFor="speech-recognition">Speech Recognition: </label>
+        <select 
+          id="speech-recognition"
+          value={speechRecognition ? "On" : "Off"}
+          onChange={(e) => setSpeechRecognition(e.target.value === "On")}
+        >
+          <option value="Off">Off</option>
+          <option value="On">On</option>
         </select>
       </div>
       <Link to="/learn" className="shiny-button">

@@ -27,11 +27,17 @@ export function LanguageProvider({ children }) {
     return saved || 'Female';
   });
 
+  const [speechRecognition, setSpeechRecognition] = useState(() => {
+    const saved = localStorage.getItem('speechRecognition');
+    return saved ? JSON.parse(saved) : false;
+  });
+
   useEffect(() => {
     localStorage.setItem('selectedLanguage', JSON.stringify(selectedLanguage));
     localStorage.setItem('beginnerMode', JSON.stringify(beginnerMode));
     localStorage.setItem('voicePreference', voicePreference);
-  }, [selectedLanguage, beginnerMode, voicePreference]);
+    localStorage.setItem('speechRecognition', JSON.stringify(speechRecognition));
+  }, [selectedLanguage, beginnerMode, voicePreference, speechRecognition]);
 
   return (
     <LanguageContext.Provider value={{ 
@@ -41,7 +47,9 @@ export function LanguageProvider({ children }) {
       beginnerMode,
       setBeginnerMode,
       voicePreference,
-      setVoicePreference
+      setVoicePreference,
+      speechRecognition,
+      setSpeechRecognition
     }}>
       {children}
     </LanguageContext.Provider>
