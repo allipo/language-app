@@ -70,13 +70,27 @@ class TextToSpeechService {
 
             // Set up error handling
             this.utterance.onerror = (event) => {
+                // Check if error is due to interruption
+                if (event.error === 'interrupted') {
+                    console.log('Speech interrupted - this is expected when starting new speech');
+                    this.isSpeaking = false;
+                    if (this.completionCheckInterval) {
+                        clearInterval(this.completionCheckInterval);
+                    }
+                    return;
+                }
+                
                 console.error('Speech synthesis error:', event);
                 this.isSpeaking = false;
+                if (this.completionCheckInterval) {
+                    clearInterval(this.completionCheckInterval);
+                }
                 if (onError) onError(event);
                 if (onEnd) onEnd();
             };
 
             this.utterance.onend = () => {
+                console.log('Speech completed normally via onend event');
                 this.isSpeaking = false;
                 if (this.completionCheckInterval) {
                     clearInterval(this.completionCheckInterval);
@@ -87,6 +101,7 @@ class TextToSpeechService {
             // Add a check for speech completion
             const checkCompletion = () => {
                 if (!this.synthesis.speaking && this.isSpeaking) {
+                    console.log('Speech completed via interval check');
                     this.isSpeaking = false;
                     if (this.completionCheckInterval) {
                         clearInterval(this.completionCheckInterval);
