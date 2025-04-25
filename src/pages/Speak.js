@@ -19,6 +19,7 @@ function Speak() {
   const [isPluralMode, setIsPluralMode] = useState(false);
   const [shouldTransition, setShouldTransition] = useState(false);
   const [recognizedSpeech, setRecognizedSpeech] = useState('');
+  const [backupTimer, setBackupTimer] = useState(null);
 
   const isSimilarEnough = (text1, text2) => {
     // Remove extra spaces and convert to lowercase
@@ -48,33 +49,60 @@ function Speak() {
     return matches / maxLength >= 0.7;
   };
 
+  const estimateSpeechDuration = (text) => {
+    // Rough estimate: 200ms per word + 500ms base time
+    const wordCount = text.split(' ').length;
+    return (wordCount * 200) + 500;
+  };
+
   useEffect(() => {
     if (currentWord) {
-      let count = 0;
       const speakWord = () => {
-        if (count < 3) {
-          const textToSpeak = selectedLanguage.code === 'ja' && currentWord.kana
-            ? currentWord.kana
-            : isPluralMode && currentWord.plural 
-              ? currentWord.plural 
-              : currentWord.article 
-                ? `${currentWord.article} ${currentWord.word}` 
-                : currentWord.word;
-          textToSpeech.speak(textToSpeak, { 
-            rate: 1,
-            lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
-            voicePreference: voicePreference
-          }, () => {
-            count++;
-            if (count === 3) {
-              setShowSpeakButton(true);
-            }
-            setTimeout(speakWord, 0);
-          });
+        const textToSpeak = selectedLanguage.code === 'ja' && currentWord.kana
+          ? currentWord.kana
+          : isPluralMode && currentWord.plural 
+            ? currentWord.plural 
+            : currentWord.article 
+              ? `${currentWord.article} ${currentWord.word}` 
+              : currentWord.word;
+        
+        // Combine three repetitions with commas
+        const combinedText = `${textToSpeak}, ${textToSpeak}, ${textToSpeak}`;
+        
+        // Clear any existing backup timer
+        if (backupTimer) {
+          clearTimeout(backupTimer);
         }
+
+        // Set backup timer based on estimated duration
+        const duration = estimateSpeechDuration(combinedText);
+        const timer = setTimeout(() => {
+          setShowSpeakButton(true);
+        }, duration);
+
+        setBackupTimer(timer);
+        
+        textToSpeech.speak(combinedText, { 
+          rate: 1,
+          lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
+          voicePreference: voicePreference
+        }, () => {
+          setShowSpeakButton(true);
+          // Clear backup timer if onEnd callback fires
+          if (backupTimer) {
+            clearTimeout(backupTimer);
+          }
+        });
       };
       speakWord();
     }
+
+    // Cleanup function
+    return () => {
+      if (backupTimer) {
+        clearTimeout(backupTimer);
+      }
+    };
   }, [currentWord, selectedLanguage, isPluralMode, voicePreference]);
 
   const handleSpeakClick = () => {
