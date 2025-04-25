@@ -67,10 +67,6 @@ function Sentence() {
       const whatWord = selectedLanguage.code === 'ja' ? '...' : languageWords[selectedLanguage.code];
       const fullSentence = `${parts[0]} ${whatWord} ${parts[1]}`;
       
-      // Calculate duration and set backup timer
-      const duration = calculateDuration(fullSentence);
-      backupTimerRef.current = setTimeout(moveToNextSentence, duration);
-
       ttsService.current.speak(fullSentence, { 
         rate: 1,
         pitch: 1,
@@ -85,7 +81,7 @@ function Sentence() {
             event.utterance.pitch = 1;
           }
         }
-      }, moveToNextSentence);
+      });
     }
   }, [currentIndex, scrambledWords, selectedLanguage.code, voicePreference]);
 
@@ -119,6 +115,10 @@ function Sentence() {
       const parts = cleanSentence.split(new RegExp(word, 'gi'));
       const fullSentence = `${parts[0]} ${word} ${parts[1]}`;
       
+      // Calculate duration and set backup timer for the completed sentence
+      const duration = calculateDuration(fullSentence);
+      backupTimerRef.current = setTimeout(moveToNextSentence, duration);
+      
       ttsService.current.speak(fullSentence, {
         rate: 1,
         pitch: 1,
@@ -133,14 +133,7 @@ function Sentence() {
             event.utterance.pitch = 1;
           }
         }
-      }, () => {
-        if (currentIndex === scrambledWords.length - 1) {
-          setIsComplete(true);
-        } else {
-          setCurrentIndex(prev => prev + 1);
-          setInput('');
-        }
-      });
+      }, moveToNextSentence);
     }
   };
 
