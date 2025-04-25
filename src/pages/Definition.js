@@ -73,16 +73,10 @@ function Definition() {
       // Only speak in non-beginner mode
       if (!beginnerMode) {
         const textToSpeak = selectedLanguage.code === 'ja' && word.kana ? word.kana : word.word;
-        tts.speak(textToSpeak, { 
+        const combinedText = `${textToSpeak}. ${definition}`;
+        tts.speak(combinedText, { 
           lang: selectedLanguage.code,
           voicePreference: voicePreference
-        }, () => {
-          setTimeout(() => {
-            tts.speak(definition, { 
-              lang: selectedLanguage.code,
-              voicePreference: voicePreference
-            });
-          }, 300);
         });
       }
     }
@@ -121,16 +115,10 @@ function Definition() {
       // Only speak in non-beginner mode
       if (!beginnerMode) {
         const textToSpeak = selectedLanguage.code === 'ja' && selectedWord.kana ? selectedWord.kana : selectedWord.word;
-        tts.speak(textToSpeak, { 
+        const combinedText = `${textToSpeak}. ${definition}`;
+        tts.speak(combinedText, { 
           lang: selectedLanguage.code,
           voicePreference: voicePreference
-        }, () => {
-          setTimeout(() => {
-            tts.speak(definition, { 
-              lang: selectedLanguage.code,
-              voicePreference: voicePreference
-            });
-          }, 300);
         });
       }
     }

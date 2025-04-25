@@ -50,9 +50,9 @@ function Speak() {
   };
 
   const estimateSpeechDuration = (text) => {
-    // Rough estimate: 200ms per word + 500ms base time
+    // More conservative estimate: 300ms per word + 1000ms base time
     const wordCount = text.split(' ').length;
-    return (wordCount * 200) + 500;
+    return (wordCount * 400) + 1000;
   };
 
   useEffect(() => {
