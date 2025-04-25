@@ -22,6 +22,22 @@ function Translate() {
   const [ttsService] = useState(() => new TextToSpeechService());
   const [isComplete, setIsComplete] = useState(false);
 
+  const estimateSpeechDuration = (text) => {
+    // Rough estimate: 0.2 seconds per word + 0.5 seconds base
+    const wordCount = text.split(/\s+/).length;
+    return (wordCount * 0.2 + 0.5) * 1000; // Convert to milliseconds
+  };
+
+  const moveToNextSentence = () => {
+    const nextIndex = currentIndex + 1;
+    if (nextIndex >= scrambledWords.length) {
+      setIsComplete(true);
+    } else {
+      setCurrentIndex(nextIndex);
+      updateSentenceOptions(scrambledWords, nextIndex);
+    }
+  };
+
   useEffect(() => {
     speechService.setLanguage(selectedLanguage.code);
   }, [selectedLanguage]);
@@ -131,17 +147,20 @@ function Translate() {
           
           // Proceed with correct answer if it's the best match
           if (bestMatch === scrambledWords[currentIndex].sentence) {
-            ttsService.speak(bestMatch, { 
+            const sentence = bestMatch;
+            const duration = estimateSpeechDuration(sentence);
+            
+            // Set backup timer
+            const backupTimer = setTimeout(() => {
+              moveToNextSentence();
+            }, duration + 1000); // Add 1 second buffer
+            
+            ttsService.speak(sentence, { 
               lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
               voicePreference: voicePreference
             }, () => {
-              const nextIndex = currentIndex + 1;
-              if (nextIndex >= scrambledWords.length) {
-                setIsComplete(true);
-              } else {
-                setCurrentIndex(nextIndex);
-                updateSentenceOptions(scrambledWords, nextIndex);
-              }
+              clearTimeout(backupTimer);
+              moveToNextSentence();
             });
             setShowIncorrectMessage(false);
           } else {
@@ -165,17 +184,19 @@ function Translate() {
 
   const handleOptionClick = (sentence) => {
     if (sentence === scrambledWords[currentIndex].sentence) {
+      const duration = estimateSpeechDuration(sentence);
+      
+      // Set backup timer
+      const backupTimer = setTimeout(() => {
+        moveToNextSentence();
+      }, duration + 1000); // Add 1 second buffer
+      
       ttsService.speak(sentence, { 
         lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
         voicePreference: voicePreference
       }, () => {
-        const nextIndex = currentIndex + 1;
-        if (nextIndex >= scrambledWords.length) {
-          setIsComplete(true);
-        } else {
-          setCurrentIndex(nextIndex);
-          updateSentenceOptions(scrambledWords, nextIndex);
-        }
+        clearTimeout(backupTimer);
+        moveToNextSentence();
       });
       setShowIncorrectMessage(false);
     } else {
@@ -223,7 +244,7 @@ function Translate() {
                         (sentence === scrambledWords[currentIndex].sentence ? 'matched' : 'incorrect') : ''} 
                         ${showAnswer && sentence === scrambledWords[currentIndex].sentence ? 'matched' : ''}
                         ${!speechRecognition ? 'clickable' : ''}`}
-                      onClick={!speechRecognition ? () => handleOptionClick(sentence) : undefined}
+                      onClick={() => handleOptionClick(sentence)}
                     >
                       <div className="sentence-text">{sentence}</div>
                       {(showKana || showRomaji || showPinyin) && (
