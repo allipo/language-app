@@ -30,10 +30,11 @@ function Translate() {
 
   const moveToNextSentence = () => {
     const nextIndex = currentIndex + 1;
-    if (nextIndex >= scrambledWords.length) {
+    if (scrambledWords.length > 0 && nextIndex >= scrambledWords.length) {
       setIsComplete(true);
     } else {
       setCurrentIndex(nextIndex);
+      updateSentenceOptions(scrambledWords, nextIndex);
     }
   };
 
@@ -46,14 +47,6 @@ function Translate() {
     setScrambledWords(scrambled);
     updateSentenceOptions(scrambled, 0);
   }, [groupWords, scrambleWordList]);
-
-  useEffect(() => {
-    if (currentIndex >= scrambledWords.length) {
-      setIsComplete(true);
-    } else {
-      updateSentenceOptions(scrambledWords, currentIndex);
-    }
-  }, [currentIndex, scrambledWords]);
 
   const updateSentenceOptions = (scrambled, index) => {
     if (scrambled.length > index) {
@@ -198,7 +191,7 @@ function Translate() {
       // Set backup timer
       const backupTimer = setTimeout(() => {
         if (!hasMovedToNext) {
-          setCurrentIndex(prev => prev + 1);
+          moveToNextSentence();
         }
       }, duration + 2000); // Add 2 second buffer
       
@@ -209,7 +202,7 @@ function Translate() {
         clearTimeout(backupTimer);
         if (!hasMovedToNext) {
           hasMovedToNext = true;
-          setCurrentIndex(prev => prev + 1);
+          moveToNextSentence();
         }
       });
       setShowIncorrectMessage(false);
