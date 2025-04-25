@@ -34,7 +34,6 @@ function Translate() {
       setIsComplete(true);
     } else {
       setCurrentIndex(nextIndex);
-      updateSentenceOptions(scrambledWords, nextIndex);
     }
   };
 
@@ -47,6 +46,14 @@ function Translate() {
     setScrambledWords(scrambled);
     updateSentenceOptions(scrambled, 0);
   }, [groupWords, scrambleWordList]);
+
+  useEffect(() => {
+    if (currentIndex >= scrambledWords.length) {
+      setIsComplete(true);
+    } else {
+      updateSentenceOptions(scrambledWords, currentIndex);
+    }
+  }, [currentIndex, scrambledWords]);
 
   const updateSentenceOptions = (scrambled, index) => {
     if (scrambled.length > index) {
@@ -191,7 +198,7 @@ function Translate() {
       // Set backup timer
       const backupTimer = setTimeout(() => {
         if (!hasMovedToNext) {
-          moveToNextSentence();
+          setCurrentIndex(prev => prev + 1);
         }
       }, duration + 2000); // Add 2 second buffer
       
@@ -202,7 +209,7 @@ function Translate() {
         clearTimeout(backupTimer);
         if (!hasMovedToNext) {
           hasMovedToNext = true;
-          moveToNextSentence();
+          setCurrentIndex(prev => prev + 1);
         }
       });
       setShowIncorrectMessage(false);
