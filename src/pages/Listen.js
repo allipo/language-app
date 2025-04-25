@@ -42,9 +42,9 @@ function Listen() {
         const allWords = groupWords.map(word => {
           const wordWithArticle = word.article ? `${word.article} ${word.word}` : word.word;
           return selectedLanguage.code === 'ja' && word.kana ? word.kana : wordWithArticle;
-        }).join(', ');
+        }).join('. ');
         
-        const fullText = `${selectedGroup.name}. ${allWords}`;
+        const fullText = `${selectedGroup.name}. ${allWords}.`;
         
         tts.speak(fullText, { 
           lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
@@ -74,7 +74,7 @@ function Listen() {
       setShowDoneButton(false);
       doneButtonTimeoutRef.current = setTimeout(() => {
         setShowDoneButton(true);
-      }, 5000);
+      }, 10000);
     } else {
       if (doneButtonTimeoutRef.current) {
         clearTimeout(doneButtonTimeoutRef.current);
