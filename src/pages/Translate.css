@@ -75,6 +75,16 @@
   border-color: #f44336;
 }
 
+.sentence-option.clickable {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.sentence-option.clickable:hover {
+  transform: scale(1.02);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
 .sentence-text {
   font-size: 1.2em;
   margin-bottom: 5px;

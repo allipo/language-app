@@ -9,7 +9,7 @@ import './Translate.css';
 
 function Translate() {
   const { groupWords, scrambleWordList } = useGroup();
-  const { selectedLanguage, beginnerMode, voicePreference } = useLanguage();
+  const { selectedLanguage, beginnerMode, voicePreference, speechRecognition } = useLanguage();
   const [scrambledWords, setScrambledWords] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [userInput, setUserInput] = useState('');
@@ -163,6 +163,26 @@ function Translate() {
     );
   };
 
+  const handleOptionClick = (sentence) => {
+    if (sentence === scrambledWords[currentIndex].sentence) {
+      ttsService.speak(sentence, { 
+        lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
+        voicePreference: voicePreference
+      }, () => {
+        const nextIndex = currentIndex + 1;
+        if (nextIndex >= scrambledWords.length) {
+          setIsComplete(true);
+        } else {
+          setCurrentIndex(nextIndex);
+          updateSentenceOptions(scrambledWords, nextIndex);
+        }
+      });
+      setShowIncorrectMessage(false);
+    } else {
+      setShowIncorrectMessage(true);
+    }
+  };
+
   return (
     <FadeTransition isActive={isComplete} targetPath="/congratulations">
       <div className="translate-page">
@@ -177,7 +197,7 @@ function Translate() {
                   className="speak-button"
                   disabled={isListening}
                 >
-                  {isListening ? '...' : 'Speak Translation'}
+                  {isListening ? '...' : speechRecognition ? 'Speak Translation' : 'Say and select translation'}
                 </button>
                 
                 <p className="user-input">
@@ -197,7 +217,9 @@ function Translate() {
                       key={index} 
                       className={`sentence-option ${matchedSentence === sentence ? 
                         (sentence === scrambledWords[currentIndex].sentence ? 'matched' : 'incorrect') : ''} 
-                        ${showAnswer && sentence === scrambledWords[currentIndex].sentence ? 'matched' : ''}`}
+                        ${showAnswer && sentence === scrambledWords[currentIndex].sentence ? 'matched' : ''}
+                        ${!speechRecognition ? 'clickable' : ''}`}
+                      onClick={!speechRecognition ? () => handleOptionClick(sentence) : undefined}
                     >
                       <div className="sentence-text">{sentence}</div>
                       {(showKana || showRomaji || showPinyin) && (
