@@ -21,8 +21,8 @@ function Sentence() {
   const backupTimerRef = useRef(null);
 
   // Constants for timing calculation
-  const CHARS_PER_SECOND = 7; // Average speaking rate
-  const MIN_DURATION = 1500; // Minimum duration in ms
+  const CHARS_PER_SECOND = 6; // Average speaking rate
+  const MIN_DURATION = 2000; // Minimum duration in ms
   const MAX_DURATION = 8000; // Maximum duration in ms
 
   const calculateDuration = (text) => {
