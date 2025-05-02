@@ -59,7 +59,8 @@ connectDB();
 app.use(cors({
   origin: [
     'https://vocabinet.netlify.app', 
-    'https://allisons-language-app.netlify.app'
+    'https://allisons-language-app.netlify.app',
+    'http://localhost:3000'
   ]
 }));
 app.use(express.json());
@@ -81,7 +82,7 @@ app.use((req, res, next) => {
 });
 
 // File upload validation
-const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif'];
+const allowedImageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 const allowedAudioTypes = ['audio/mpeg', 'audio/wav', 'audio/ogg'];
 
 // Admin routes

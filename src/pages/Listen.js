@@ -1,99 +1,83 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useGroup } from '../context/GroupContext';
 import { useLanguage } from '../context/LanguageContext';
 import TextToSpeechService from '../services/textToSpeechService';
-import FadeTransition from '../components/FadeTransition';
 import FadeIn from '../components/FadeIn';
+import FadeTransition from '../components/FadeTransition';
 import './Listen.css';
 
 function Listen() {
   const { selectedGroup, groupImageUrl, groupWords } = useGroup();
   const { selectedLanguage, voicePreference } = useLanguage();
+  const ttsService = new TextToSpeechService();
+  const [showPlayIcon, setShowPlayIcon] = useState(false);
+  const [shuffledWords, setShuffledWords] = useState([]);
+  const [spokenWords, setSpokenWords] = useState([]);
+  const [currentWordIndex, setCurrentWordIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [currentWordIndex, setCurrentWordIndex] = useState(-1);
   const [shouldTransition, setShouldTransition] = useState(false);
-  const [hideContent, setHideContent] = useState(false);
-  const [showDoneButton, setShowDoneButton] = useState(false);
-  const tts = new TextToSpeechService();
-  const backgroundAudioRef = useRef(null);
-  const doneButtonTimeoutRef = useRef(null);
 
   useEffect(() => {
-    if (selectedGroup?.backgroundSound) {
-      backgroundAudioRef.current = new Audio(selectedGroup.backgroundSound);
-      backgroundAudioRef.current.loop = true;
-      backgroundAudioRef.current.volume = 0.2; // Set volume to 20%
+    if (groupWords) {
+      const shuffled = [...groupWords].sort(() => Math.random() - 0.5);
+      setShuffledWords(shuffled);
+      setSpokenWords([...groupWords].sort(() => Math.random() - 0.5));
     }
-    return () => {
-      if (backgroundAudioRef.current) {
-        backgroundAudioRef.current.pause();
-        backgroundAudioRef.current = null;
-      }
-    };
-  }, [selectedGroup]);
+  }, [groupWords]);
 
   useEffect(() => {
-    if (isPlaying) {
-      if (backgroundAudioRef.current) {
-        backgroundAudioRef.current.play();
-      }
-      if (currentWordIndex === -1) {
-        // Create a single string with group name and all words
-        const allWords = groupWords.map(word => {
-          const wordWithArticle = word.article ? `${word.article} ${word.word}` : word.word;
-          return selectedLanguage.code === 'ja' && word.kana ? word.kana : wordWithArticle;
-        }).join('. ');
-        
-        const fullText = `${selectedGroup.name}. ${allWords}.`;
-        
-        tts.speak(fullText, { 
-          lang: `${selectedLanguage.code}-${selectedLanguage.code.toUpperCase()}`,
-          voicePreference: voicePreference,
-          rate: 0.7 // Slow down the speech rate
-        }, () => {
-          setIsPlaying(false);
-          setHideContent(true);
-          setTimeout(() => {
-            setShouldTransition(true);
-          }, 500);
-        }, (error) => {
-          console.error('Error speaking text:', error);
-          setIsPlaying(false);
+    if (selectedGroup) {
+      const timer = setTimeout(() => {
+        ttsService.speak(selectedGroup.name, {
+          lang: selectedLanguage.code,
+          rate: 0.8
         });
-      }
-    } else {
-      tts.stop();
-      if (backgroundAudioRef.current) {
-        backgroundAudioRef.current.pause();
+        setTimeout(() => {
+          setShowPlayIcon(true);
+        }, 2000);
+      }, 1500);
+
+      return () => {
+        clearTimeout(timer);
+        ttsService.stop();
+      };
+    }
+  }, [selectedGroup, selectedLanguage]);
+
+  const handlePlayClick = () => {
+    if (spokenWords.length > 0) {
+      setIsPlaying(true);
+      const textToSpeak = selectedLanguage.code === 'ja' && spokenWords[currentWordIndex].kana 
+        ? spokenWords[currentWordIndex].kana 
+        : spokenWords[currentWordIndex].word;
+      ttsService.speak(textToSpeak, {
+        lang: selectedLanguage.code,
+        rate: 0.8
+      });
+    }
+  };
+
+  const handleWordClick = (clickedWord) => {
+    if (!isPlaying) return;
+    
+    if (clickedWord._id === spokenWords[currentWordIndex]._id) {
+      // Correct word selected
+      if (currentWordIndex < spokenWords.length - 1) {
+        setCurrentWordIndex(prev => prev + 1);
+        const textToSpeak = selectedLanguage.code === 'ja' && spokenWords[currentWordIndex + 1].kana 
+          ? spokenWords[currentWordIndex + 1].kana 
+          : spokenWords[currentWordIndex + 1].word;
+        ttsService.speak(textToSpeak, {
+          lang: selectedLanguage.code,
+          rate: 0.8
+        });
+      } else {
+        // Game completed
+        setIsPlaying(false);
+        setCurrentWordIndex(0);
+        setShouldTransition(true);
       }
     }
-  }, [isPlaying, currentWordIndex, selectedLanguage]);
-
-  useEffect(() => {
-    if (isPlaying) {
-      setShowDoneButton(false);
-      doneButtonTimeoutRef.current = setTimeout(() => {
-        setShowDoneButton(true);
-      }, 10000);
-    } else {
-      if (doneButtonTimeoutRef.current) {
-        clearTimeout(doneButtonTimeoutRef.current);
-      }
-      setShowDoneButton(false);
-    }
-    return () => {
-      if (doneButtonTimeoutRef.current) {
-        clearTimeout(doneButtonTimeoutRef.current);
-      }
-    };
-  }, [isPlaying]);
-
-  const handleDoneClick = () => {
-    setIsPlaying(false);
-    setHideContent(true);
-    setTimeout(() => {
-      setShouldTransition(true);
-    }, 500);
   };
 
   if (!selectedGroup) {
@@ -109,35 +93,42 @@ function Listen() {
     <FadeTransition isActive={shouldTransition} targetPath="/guess">
       <FadeIn>
         <div className="listen-page">
-          <div className="group-info">
-            {!hideContent && (
-              <div className="play-button-container">
-                <img 
-                  src={isPlaying ? "/icons/pause-icon.svg" : "/icons/play-icon.svg"}
-                  alt={isPlaying ? "Pause" : "Play"} 
-                  className="play-icon"
-                  onClick={() => setIsPlaying(!isPlaying)}
-                />
-                {showDoneButton && (
-                  <button 
-                    className="done-button"
-                    onClick={handleDoneClick}
-                  >
-                    Done
-                  </button>
+          <div className="listen-group-info">
+            <div className="listen-image-container">
+              <img 
+                src={groupImageUrl} 
+                alt={selectedGroup.name} 
+                className="listen-group-image"
+                onError={(e) => {
+                  console.error('Failed to load group image:', groupImageUrl);
+                  e.target.onerror = null;
+                  e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
+                }}
+              />
+              <div className="listen-group-name-card">
+                {!showPlayIcon && <h2 className="listen-group-name">{selectedGroup.name}</h2>}
+                {showPlayIcon && (
+                  <img 
+                    src="/icons/play-icon.svg" 
+                    alt="Play" 
+                    className="listen-play-icon"
+                    onClick={handlePlayClick}
+                    style={{ cursor: 'pointer' }}
+                  />
                 )}
               </div>
-            )}
-            <img 
-              src={groupImageUrl} 
-              alt={selectedGroup.name} 
-              className="group-image"
-              onError={(e) => {
-                console.error('Failed to load group image:', groupImageUrl);
-                e.target.onerror = null;
-                e.target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMzAwIiBoZWlnaHQ9IjMwMCIgZmlsbD0iI2VlZWVlZSIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0iQXJpYWwiIGZvbnQtc2l6ZT0iMjQiIGZpbGw9IiM5OTk5OTkiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGR5PSIuM2VtIj5ObyBJbWFnZTwvdGV4dD48L3N2Zz4=';
-              }}
-            />
+            </div>
+            <div className="listen-words-container">
+              {shuffledWords.map((word) => (
+                <div 
+                  key={word._id} 
+                  className={`listen-word-item ${isPlaying ? 'clickable' : ''}`}
+                  onClick={() => handleWordClick(word)}
+                >
+                  {(selectedLanguage.code === 'ja' || selectedLanguage.code === 'zh') && word.romajiPinyin ? word.romajiPinyin : word.word}
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </FadeIn>

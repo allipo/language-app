@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "proxy": "https://allisons-language-app.de.r.appspot.com",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "dependencies": {
     "@google-cloud/storage": "^7.15.2",
     "@testing-library/dom": "^10.4.0",
