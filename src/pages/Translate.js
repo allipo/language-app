@@ -69,6 +69,7 @@ function Translate() {
 
   const handleStartListening = () => {
     setIsListening(true);
+    setMatchedSentence(null);
     speechService.startListening(
       (text) => {
         setUserInput(text);
@@ -81,32 +82,127 @@ function Translate() {
         
         sentenceOptions.forEach(sentence => {
           const cleanSentence = sentence.toLowerCase().trim().replace(/[.,!?]/g, '');
-          const userWords = cleanUserText.split(' ').filter(word => word.length > 0);
-          const sentenceWords = cleanSentence.split(' ').filter(word => word.length > 0);
           
-          // Calculate word similarity score
-          let totalSimilarity = 0;
-          const matchedUserWords = new Set();
-          const matchedSentenceWords = new Set();
+          // Special handling for Japanese text
+          let userWords, sentenceWords;
+          if (selectedLanguage.code === 'ja') {
+            // For Japanese, normalize spaces and split more carefully
+            const normalizedUserText = cleanUserText.replace(/\s+/g, '');
+            const normalizedSentence = cleanSentence.replace(/\s+/g, '');
+            
+            // Split into characters for Japanese
+            userWords = [...normalizedUserText];
+            sentenceWords = [...normalizedSentence];
+          } else {
+            // For other languages, use word-based splitting
+            userWords = cleanUserText.split(' ').filter(word => word.length > 0);
+            sentenceWords = cleanSentence.split(' ').filter(word => word.length > 0);
+          }
           
-          userWords.forEach(userWord => {
+          // Skip if user said nothing
+          if (userWords.length === 0) return;
+          
+          // Calculate word-by-word matching with improved algorithm
+          let matchedWords = 0;
+          let totalWordScore = 0;
+          const usedSentenceWords = new Set();
+          
+          // First pass: try to match words in order for better accuracy
+          const minLength = Math.min(userWords.length, sentenceWords.length);
+          for (let i = 0; i < minLength; i++) {
+            const userWord = userWords[i];
+            const sentenceWord = sentenceWords[i];
+            
+            let score = 0;
+            
+            // Exact match gets highest score
+            if (userWord === sentenceWord) {
+              score = 1.0;
+            }
+            // Very close match (one character difference)
+            else if (Math.abs(userWord.length - sentenceWord.length) <= 1) {
+              const longer = userWord.length > sentenceWord.length ? userWord : sentenceWord;
+              const shorter = userWord.length > sentenceWord.length ? sentenceWord : userWord;
+              
+              if (longer.includes(shorter) || shorter.includes(longer)) {
+                score = 0.9;
+              } else {
+                // Check for single character differences
+                let differences = 0;
+                for (let j = 0; j < Math.min(userWord.length, sentenceWord.length); j++) {
+                  if (userWord[j] !== sentenceWord[j]) differences++;
+                }
+                differences += Math.abs(userWord.length - sentenceWord.length);
+                
+                if (differences <= 1) {
+                  score = 0.8;
+                }
+              }
+            }
+            // Partial match (one word contains the other)
+            else if (userWord.includes(sentenceWord) || sentenceWord.includes(userWord)) {
+              const minLength = Math.min(userWord.length, sentenceWord.length);
+              const maxLength = Math.max(userWord.length, sentenceWord.length);
+              score = (minLength / maxLength) * 0.7;
+            }
+            // Similar words (shared characters)
+            else {
+              const commonChars = [...userWord].filter(char => 
+                sentenceWord.includes(char)
+              ).length;
+              const similarity = commonChars / Math.max(userWord.length, sentenceWord.length);
+              if (similarity > 0.6) {
+                score = similarity * 0.5;
+              }
+            }
+            
+            if (score > 0.1) {
+              matchedWords++;
+              totalWordScore += score;
+              usedSentenceWords.add(sentenceWord);
+            }
+          }
+          
+          // Second pass: try to match remaining user words to unused sentence words
+          for (let i = minLength; i < userWords.length; i++) {
+            const userWord = userWords[i];
             let bestWordScore = 0;
             let bestSentenceWord = null;
             
-            sentenceWords.forEach(sentenceWord => {
-              if (matchedSentenceWords.has(sentenceWord)) return;
+            sentenceWords.forEach((sentenceWord, j) => {
+              if (usedSentenceWords.has(sentenceWord) || j < minLength) return;
               
-              // Exact match
+              let score = 0;
+              
+              // Exact match gets highest score
               if (userWord === sentenceWord) {
-                bestWordScore = 1;
-                bestSentenceWord = sentenceWord;
+                score = 1.0;
               }
-              // Partial match (one contains the other)
+              // Very close match (one character difference)
+              else if (Math.abs(userWord.length - sentenceWord.length) <= 1) {
+                const longer = userWord.length > sentenceWord.length ? userWord : sentenceWord;
+                const shorter = userWord.length > sentenceWord.length ? sentenceWord : userWord;
+                
+                if (longer.includes(shorter) || shorter.includes(longer)) {
+                  score = 0.9;
+                } else {
+                  // Check for single character differences
+                  let differences = 0;
+                  for (let k = 0; k < Math.min(userWord.length, sentenceWord.length); k++) {
+                    if (userWord[k] !== sentenceWord[k]) differences++;
+                  }
+                  differences += Math.abs(userWord.length - sentenceWord.length);
+                  
+                  if (differences <= 1) {
+                    score = 0.8;
+                  }
+                }
+              }
+              // Partial match (one word contains the other)
               else if (userWord.includes(sentenceWord) || sentenceWord.includes(userWord)) {
-                const lengthRatio = Math.min(userWord.length, sentenceWord.length) / 
-                                  Math.max(userWord.length, sentenceWord.length);
-                bestWordScore = 0.7 * lengthRatio;
-                bestSentenceWord = sentenceWord;
+                const minLength = Math.min(userWord.length, sentenceWord.length);
+                const maxLength = Math.max(userWord.length, sentenceWord.length);
+                score = (minLength / maxLength) * 0.7;
               }
               // Similar words (shared characters)
               else {
@@ -114,36 +210,49 @@ function Translate() {
                   sentenceWord.includes(char)
                 ).length;
                 const similarity = commonChars / Math.max(userWord.length, sentenceWord.length);
-                if (similarity > 0.5) {
-                  bestWordScore = similarity;
-                  bestSentenceWord = sentenceWord;
+                if (similarity > 0.6) {
+                  score = similarity * 0.5;
                 }
               }
               
-              if (bestWordScore > 0) {
-                matchedUserWords.add(userWord);
-                matchedSentenceWords.add(bestSentenceWord);
-                totalSimilarity += bestWordScore;
+              if (score > bestWordScore) {
+                bestWordScore = score;
+                bestSentenceWord = sentenceWord;
               }
             });
-          });
+            
+            if (bestWordScore > 0.1) {
+              matchedWords++;
+              totalWordScore += bestWordScore;
+              usedSentenceWords.add(bestSentenceWord);
+            }
+          }
           
-          // Calculate final score considering word order and completeness
-          const wordMatchRatio = matchedUserWords.size / Math.max(userWords.length, sentenceWords.length);
-          const orderBonus = 0.2; // Small bonus for matching words in similar order
-          const score = (totalSimilarity / Math.max(userWords.length, sentenceWords.length)) * 0.8 + 
-                       wordMatchRatio * 0.2 + orderBonus;
+          // Calculate final score with improved weighting
+          const wordMatchRatio = matchedWords / userWords.length;
+          const averageWordScore = matchedWords > 0 ? totalWordScore / matchedWords : 0;
+          const lengthPenalty = Math.abs(userWords.length - sentenceWords.length) * 0.03; // Even more reduced penalty
           
-          if (score > bestMatchScore) {
-            bestMatchScore = score;
+          // Final score: 60% word match ratio, 30% average word quality, 10% length penalty
+          const score = (wordMatchRatio * 0.6) + (averageWordScore * 0.3) - (lengthPenalty * 0.1);
+          
+          // For Japanese, use a simpler scoring approach since we're comparing characters
+          const finalScore = selectedLanguage.code === 'ja' 
+            ? (wordMatchRatio * 0.8) + (averageWordScore * 0.2) - (lengthPenalty * 0.05)
+            : score;
+          
+          console.log(`"${sentence}": score=${finalScore.toFixed(3)}, matches=${matchedWords}/${userWords.length}, avgWordScore=${averageWordScore.toFixed(3)}`);
+          
+          if (finalScore > bestMatchScore) {
+            bestMatchScore = finalScore;
             bestMatch = sentence;
           }
         });
         
-        console.log(`Best match: "${bestMatch}" with score: ${bestMatchScore}`);
+        console.log(`Best match: "${bestMatch}" with score: ${bestMatchScore.toFixed(3)}`);
         
-        // Always match to highest scoring sentence
-        if (bestMatchScore > 0) {
+        // Use the best match regardless of threshold
+        if (bestMatch) {
           setMatchedSentence(bestMatch);
           
           // Proceed with correct answer if it's the best match
@@ -168,9 +277,9 @@ function Translate() {
             setShowIncorrectMessage(true);
           }
         } else {
-          setMatchedSentence(sentenceOptions[0]);
+          setMatchedSentence(null);
           setShowIncorrectMessage(true);
-          console.log('No matches found, defaulting to first option');
+          console.log('No matches found');
         }
       },
       (error) => {
