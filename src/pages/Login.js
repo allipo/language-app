@@ -31,8 +31,10 @@ function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('Login attempt:', { username });
     if (isLocked) {
       setError(`Too many failed attempts. Please try again in ${Math.ceil((lockoutTime - new Date()) / 60000)} minutes.`);
+      console.warn('Login blocked due to lockout.', { lockoutTime });
       return;
     }
 
@@ -46,6 +48,7 @@ function Login() {
       const data = await response.json();
       
       if (!response.ok) {
+        console.error('Login failed response:', { status: response.status, data });
         const newAttempts = failedAttempts + 1;
         setFailedAttempts(newAttempts);
         localStorage.setItem('failedAttempts', newAttempts);
@@ -56,6 +59,7 @@ function Login() {
           setLockoutTime(lockoutEnd);
           localStorage.setItem('lockoutTime', lockoutEnd);
           setError(`Too many failed attempts. Please try again in 5 minutes.`);
+          console.warn('User locked out after too many failed attempts.', { lockoutEnd });
         } else {
           throw new Error(data.message || 'Login failed');
         }
@@ -67,9 +71,11 @@ function Login() {
       localStorage.removeItem('lockoutTime');
       setFailedAttempts(0);
       
+      console.log('Login successful:', { admin: data.admin });
       login(data.admin, data.token);
       navigate('/admindashboard');
     } catch (err) {
+      console.error('Login error caught:', err);
       setError(err.message);
     }
   };
