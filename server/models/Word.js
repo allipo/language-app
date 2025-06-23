@@ -84,6 +84,24 @@ const wordSchema = new mongoose.Schema({
     trim: true,
     maxlength: 500
   },
+  wordInSentence: {
+    type: String,
+    required: false,
+    trim: true,
+    maxlength: 100
+  },
+  wordInSentenceKana: {
+    type: String,
+    required: false,
+    trim: true,
+    maxlength: 100
+  },
+  wordInSentenceRomajiPinyin: {
+    type: String,
+    required: false,
+    trim: true,
+    maxlength: 100
+  },
   group: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Group',

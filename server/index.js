@@ -312,7 +312,7 @@ app.delete('/api/groups/:groupId', async (req, res) => {
 app.get('/api/groups/:groupId/words', async (req, res) => {
   try {
     const words = await Word.find({ group: req.params.groupId })
-      .select('word translation article plural sentence translatedSentence picture group createdAt definition translatedDefinition romajiPinyin kana sentenceRomajiPinyin sentenceKana');
+      .select('word translation article plural sentence translatedSentence picture group createdAt definition translatedDefinition romajiPinyin kana sentenceRomajiPinyin sentenceKana wordInSentence wordInSentenceKana wordInSentenceRomajiPinyin');
     res.json(words);
   } catch (err) {
     res.status(500).json({ message: err.message });

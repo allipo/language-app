@@ -424,6 +424,30 @@ function EditWordGroup() {
                 />
               </div>
               <div>
+                <label>Word in Sentence (optional):</label>
+                <input
+                  type="text"
+                  value={word.wordInSentence}
+                  onChange={(e) => handleWordChange(index, 'wordInSentence', e.target.value)}
+                />
+              </div>
+              <div>
+                <label>Word in Sentence Kana (optional):</label>
+                <input
+                  type="text"
+                  value={word.wordInSentenceKana}
+                  onChange={(e) => handleWordChange(index, 'wordInSentenceKana', e.target.value)}
+                />
+              </div>
+              <div>
+                <label>Word in Sentence Romaji/Pinyin (optional):</label>
+                <input
+                  type="text"
+                  value={word.wordInSentenceRomajiPinyin}
+                  onChange={(e) => handleWordChange(index, 'wordInSentenceRomajiPinyin', e.target.value)}
+                />
+              </div>
+              <div>
                 <label>Picture:</label>
                 <input
                   type="file"
