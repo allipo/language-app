@@ -107,8 +107,9 @@ function Sentence() {
     }
   }, [currentIndex, scrambledWords, selectedLanguage.code, voicePreference]);
 
-  const getSentenceWithBlank = (sentence, word) => {
-    const regex = new RegExp(word, 'gi');
+  const getSentenceWithBlank = (sentence, word, wordInSentence) => {
+    const target = wordInSentence || word;
+    const regex = new RegExp(target, 'gi');
     return sentence.replace(regex, '____________');
   };
 
@@ -128,20 +129,26 @@ function Sentence() {
       const normalized = normalizeString(str);
       return isJapanese ? normalizeJapaneseVowels(normalized) : normalized;
     };
-    
+
+    // Use wordInSentence if present for answer checking
+    const targetWord = currentWord?.wordInSentence || currentWord?.word;
+    const targetKana = currentWord?.kana;
+    const targetRomajiPinyin = currentWord?.romajiPinyin;
+
     // Check if input matches any of the accepted forms
     const isMatch = 
-      normalizeJapaneseString(value) === normalizeJapaneseString(currentWord?.word) ||
-      (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(currentWord?.kana)) ||
-      (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(currentWord?.romajiPinyin)) ||
-      (isChinese && normalizeString(value) === normalizeString(currentWord?.romajiPinyin));
+      normalizeJapaneseString(value) === normalizeJapaneseString(targetWord) ||
+      (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(targetKana)) ||
+      (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(targetRomajiPinyin)) ||
+      (isChinese && normalizeString(value) === normalizeString(targetRomajiPinyin));
     
     if (isMatch) {
       ttsService.current.stop();
-      const { sentence, word } = scrambledWords[currentIndex];
+      const { sentence, word, wordInSentence } = scrambledWords[currentIndex];
+      const target = wordInSentence || word;
       const cleanSentence = sentence.replace(/\.$/, '');
-      const parts = cleanSentence.split(new RegExp(word, 'gi'));
-      const fullSentence = `${parts[0]} ${word} ${parts[1]}`;
+      const parts = cleanSentence.split(new RegExp(target, 'gi'));
+      const fullSentence = `${parts[0]} ${target} ${parts[1]}`;
       
       // Calculate duration and set backup timer for the completed sentence
       const duration = calculateDuration(fullSentence);
@@ -153,7 +160,7 @@ function Sentence() {
         lang: selectedLanguage.code,
         voicePreference: voicePreference,
         onBoundary: (event) => {
-          if (event.name === 'word' && event.word.toLowerCase() === word.toLowerCase()) {
+          if (event.name === 'word' && event.word.toLowerCase() === target.toLowerCase()) {
             event.utterance.rate = 0.9;
             event.utterance.pitch = 1.1;
           } else {
@@ -184,11 +191,15 @@ function Sentence() {
         <div>
           {scrambledWords.length > 0 && currentIndex < scrambledWords.length && (
             <>
-              <h3>{getSentenceWithBlank(scrambledWords[currentIndex].sentence, scrambledWords[currentIndex].word)}</h3>
+              <h3>{getSentenceWithBlank(
+                scrambledWords[currentIndex].sentence,
+                scrambledWords[currentIndex].word,
+                scrambledWords[currentIndex].wordInSentence
+              )}</h3>
               {beginnerMode && (selectedLanguage.code === 'ja' || selectedLanguage.code === 'zh') && scrambledWords[currentIndex].sentenceRomajiPinyin && (
                 <p className="romaji-pinyin">
                   {scrambledWords[currentIndex].sentenceRomajiPinyin.replace(
-                    new RegExp(scrambledWords[currentIndex].romajiPinyin || scrambledWords[currentIndex].word, 'gi'),
+                    new RegExp(scrambledWords[currentIndex].romajiPinyin || scrambledWords[currentIndex].wordInSentence || scrambledWords[currentIndex].word, 'gi'),
                     '____'
                   )}
                 </p>
