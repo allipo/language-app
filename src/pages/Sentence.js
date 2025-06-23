@@ -47,13 +47,15 @@ function Sentence() {
       .replace(/ā/g, 'aa')
       .replace(/ī/g, 'ii')
       .replace(/ū/g, 'uu')
-      .replace(/ē/g, 'ee')
-      .replace(/ō/g, 'oo')
+      .replace(/ē/g, 'ee')  // Long e: ē → ee
+      .replace(/ei/g, 'ee') // Long e: ei → ee (for Japanese)
+      .replace(/ō/g, 'ou')  // Japanese long o should be 'ou', not 'oo'
       .replace(/Ā/g, 'AA')
       .replace(/Ī/g, 'II')
       .replace(/Ū/g, 'UU')
-      .replace(/Ē/g, 'EE')
-      .replace(/Ō/g, 'OO');
+      .replace(/Ē/g, 'EE')  // Long E: Ē → EE
+      .replace(/EI/g, 'EE') // Long E: EI → EE (for Japanese)
+      .replace(/Ō/g, 'OU'); // Japanese long O should be 'OU', not 'OO'
     
     return normalized;
   };
