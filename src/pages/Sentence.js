@@ -38,6 +38,26 @@ function Sentence() {
     }
   };
 
+  // Helper function to normalize Japanese elongated vowels
+  const normalizeJapaneseVowels = (str) => {
+    if (!str) return str;
+    
+    // Convert macrons to double vowels
+    let normalized = str
+      .replace(/ā/g, 'aa')
+      .replace(/ī/g, 'ii')
+      .replace(/ū/g, 'uu')
+      .replace(/ē/g, 'ee')
+      .replace(/ō/g, 'oo')
+      .replace(/Ā/g, 'AA')
+      .replace(/Ī/g, 'II')
+      .replace(/Ū/g, 'UU')
+      .replace(/Ē/g, 'EE')
+      .replace(/Ō/g, 'OO');
+    
+    return normalized;
+  };
+
   const moveToNextSentence = () => {
     clearBackupTimer();
     if (currentIndex === scrambledWords.length - 1) {
@@ -101,11 +121,17 @@ function Sentence() {
     // Normalize strings by removing spaces and converting to lowercase
     const normalizeString = (str) => str?.replace(/\s+/g, '').toLowerCase();
     
+    // For Japanese, also normalize elongated vowels
+    const normalizeJapaneseString = (str) => {
+      const normalized = normalizeString(str);
+      return isJapanese ? normalizeJapaneseVowels(normalized) : normalized;
+    };
+    
     // Check if input matches any of the accepted forms
     const isMatch = 
-      normalizeString(value) === normalizeString(currentWord?.word) ||
-      (isJapanese && normalizeString(value) === normalizeString(currentWord?.kana)) ||
-      (isJapanese && normalizeString(value) === normalizeString(currentWord?.romajiPinyin)) ||
+      normalizeJapaneseString(value) === normalizeJapaneseString(currentWord?.word) ||
+      (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(currentWord?.kana)) ||
+      (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(currentWord?.romajiPinyin)) ||
       (isChinese && normalizeString(value) === normalizeString(currentWord?.romajiPinyin));
     
     if (isMatch) {
