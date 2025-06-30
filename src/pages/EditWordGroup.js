@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { getCompleteGroup, updateGroup, updateWordsForGroup, addGroup, addWordsToGroup } from '../services/api';
 import { useGroup } from '../context/GroupContext';
 import { AVAILABLE_TAGS } from '../constants/tags';
+import Papa from 'papaparse';
 import './EditWordGroup.css';
 
 function EditWordGroup() {
@@ -20,6 +21,9 @@ function EditWordGroup() {
   });
   const [originalData, setOriginalData] = useState(null);
   const [words, setWords] = useState([]);
+  const [csvData, setCsvData] = useState(null);
+  const [csvError, setCsvError] = useState('');
+  const [showCsvInstructions, setShowCsvInstructions] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -58,13 +62,27 @@ function EditWordGroup() {
     const formData = new FormData();
     formData.append('file', file);
 
+    console.log('Uploading file:', file.name, file.size);
+
     const response = await fetch('https://allisons-language-app.de.r.appspot.com/api/upload', {
       method: 'POST',
       body: formData
     });
 
+    console.log('Upload response status:', response.status);
+    
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+    }
+
     const data = await response.json();
-    return data.publicUrl;
+    console.log('Upload response data:', data);
+    
+    if (!data.file) {
+      throw new Error('No file URL in response');
+    }
+    
+    return data.file;
   };
 
   const handleImageUpload = async (e, type, index) => {
@@ -85,6 +103,13 @@ function EditWordGroup() {
         const newWords = [...words];
         newWords[index] = { ...newWords[index], picture: fileUrl };
         setWords(newWords);
+        
+        // Debug logging
+        console.log(`Picture uploaded for word ${index}:`, {
+          fileUrl,
+          updatedWord: newWords[index],
+          allWords: newWords
+        });
       }
     } catch (err) {
       alert('Error uploading file');
@@ -107,6 +132,112 @@ function EditWordGroup() {
     } catch (err) {
       alert('Error uploading audio file');
     }
+  };
+
+  const handleCsvUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+      setCsvError('Please select a valid CSV file');
+      return;
+    }
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (results.errors.length > 0) {
+          setCsvError('Error parsing CSV file: ' + results.errors[0].message);
+          return;
+        }
+
+        if (results.data.length === 0) {
+          setCsvError('CSV file is empty');
+          return;
+        }
+
+        setCsvData(results.data);
+        setCsvError('');
+        
+        // Auto-populate words
+        const wordRows = results.data.filter(row => row.word || row.translation);
+        if (wordRows.length > 0) {
+          const newWords = wordRows.map((row, index) => {
+            // Preserve existing picture and _id if available
+            const existingWord = words[index] || {};
+            const existingPicture = existingWord.picture || '';
+            const existingId = existingWord._id || '';
+            
+            return {
+              _id: existingId, // Preserve the _id for existing words
+              word: row.word || '',
+              translation: row.translation || '',
+              definition: row.definition || '',
+              translatedDefinition: row.translatedDefinition || '',
+              article: row.article || '',
+              plural: row.plural || '',
+              sentence: row.sentence || '',
+              translatedSentence: row.translatedSentence || '',
+              romajiPinyin: row.romajiPinyin || '',
+              kana: row.kana || '',
+              sentenceRomajiPinyin: row.sentenceRomajiPinyin || '',
+              sentenceKana: row.sentenceKana || '',
+              picture: existingPicture // Keep existing picture instead of clearing it
+            };
+          });
+
+          setWords(newWords);
+        }
+      },
+      error: (error) => {
+        setCsvError('Error reading CSV file: ' + error.message);
+      }
+    });
+  };
+
+  const downloadCsvTemplate = () => {
+    const template = [
+      {
+        // Word Information (REQUIRED for each word)
+        word: 'hola (TARGET LANGUAGE)',
+        translation: 'hello (ENGLISH)',
+        definition: 'Un saludo (TARGET LANGUAGE)',
+        translatedDefinition: 'A greeting (ENGLISH)',
+        article: 'la (optional)',
+        plural: 'holas (optional)',
+        sentence: 'Hola, ¿cómo estás? (TARGET LANGUAGE)',
+        translatedSentence: 'Hello, how are you? (ENGLISH)',
+        romajiPinyin: '(optional - for Japanese/Chinese pronunciation)',
+        kana: '(optional - for Japanese kanji pronunciation)',
+        sentenceRomajiPinyin: '(optional - sentence pronunciation)',
+        sentenceKana: '(optional - sentence kanji pronunciation)'
+      },
+      {
+        // Second word
+        word: 'adios (TARGET LANGUAGE)',
+        translation: 'goodbye (ENGLISH)',
+        definition: 'Una despedida (TARGET LANGUAGE)',
+        translatedDefinition: 'A farewell (ENGLISH)',
+        article: '',
+        plural: '',
+        sentence: 'Adios, hasta luego (TARGET LANGUAGE)',
+        translatedSentence: 'Goodbye, see you later (ENGLISH)',
+        romajiPinyin: '',
+        kana: '',
+        sentenceRomajiPinyin: '',
+        sentenceKana: ''
+      }
+    ];
+
+    const csv = Papa.unparse(template);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'word_group_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const handleSubmit = async (e) => {
@@ -140,8 +271,20 @@ function EditWordGroup() {
             changedFields[key] = word[key];
           }
         });
+        
+        // Debug logging for picture changes
+        if (word.picture !== originalWord.picture) {
+          console.log(`Picture changed for word ${index}:`, {
+            original: originalWord.picture,
+            new: word.picture,
+            willSave: changedFields.picture
+          });
+        }
+        
         return changedFields;
       }).filter(word => Object.keys(word).length > 1);
+
+      console.log('Changed words to save:', changedWords);
 
       if (Object.keys(changedGroupFields).length > 0) {
         await updateGroup(groupId, changedGroupFields);
@@ -201,6 +344,89 @@ function EditWordGroup() {
     <div className="edit-word-group">
       <h1>Edit Word Group</h1>
       <button className="copy-button" onClick={handleCopyGroup}>Copy Word Group</button>
+      
+      <div className="csv-upload-section">
+        <h2>CSV Upload (Optional)</h2>
+        <p>Upload a CSV file to update the word fields. You can still edit the data after upload.</p>
+        
+        <div className="csv-instructions">
+          <button 
+            type="button" 
+            onClick={() => setShowCsvInstructions(!showCsvInstructions)}
+            className="instructions-toggle-btn"
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: '#007bff', 
+              textDecoration: 'underline', 
+              cursor: 'pointer',
+              padding: '0',
+              marginBottom: '10px'
+            }}
+          >
+            {showCsvInstructions ? 'Hide' : 'Show'} CSV Format Instructions
+          </button>
+          
+          {showCsvInstructions && (
+            <div>
+              <h3>CSV Format Instructions:</h3>
+              <ul>
+                <li><strong>Required Fields:</strong> word, translation, definition, translatedDefinition, sentence, translatedSentence</li>
+                <li><strong>Language Guidelines:</strong>
+                  <ul>
+                    <li><strong>Target Language:</strong> word, definition, sentence (in the language you're learning)</li>
+                    <li><strong>English:</strong> translation, translatedDefinition, translatedSentence (English translations)</li>
+                  </ul>
+                </li>
+                <li><strong>Optional Fields:</strong> article, plural, romajiPinyin, kana, sentenceRomajiPinyin, sentenceKana</li>
+                <li><strong>Note:</strong> Pictures must be uploaded manually in the form below</li>
+              </ul>
+            </div>
+          )}
+        </div>
+        
+        <div className="csv-controls">
+          <button 
+            type="button" 
+            onClick={downloadCsvTemplate}
+            className="template-btn"
+          >
+            Download CSV Template
+          </button>
+          
+          <div className="file-upload">
+            <label>Upload CSV File:</label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCsvUpload}
+            />
+          </div>
+        </div>
+        
+        {csvError && (
+          <div className="csv-error">
+            {csvError}
+          </div>
+        )}
+        
+        {csvData && (
+          <div className="csv-success">
+            ✓ CSV uploaded successfully! {csvData.length} rows loaded.
+            <button 
+              type="button" 
+              onClick={() => {
+                setCsvData(null);
+                setCsvError('');
+              }}
+              className="clear-csv-btn"
+            >
+              Clear CSV Data
+            </button>
+          </div>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit}>
         <div className="group-info">
           <h2>Group Information</h2>

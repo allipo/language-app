@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { addGroup, addWordsToGroup } from '../services/api';
 import { AVAILABLE_TAGS } from '../constants/tags';
+import Papa from 'papaparse';
 import './Input.css';
 
 function Input() {
@@ -34,6 +35,10 @@ function Input() {
     wordInSentenceRomajiPinyin: ''
   })));
 
+  const [csvData, setCsvData] = useState(null);
+  const [csvError, setCsvError] = useState('');
+  const [showCsvInstructions, setShowCsvInstructions] = useState(false);
+
   const languages = [
     { code: 'zh', name: 'Chinese' },
     { code: 'fr', name: 'French' },
@@ -53,6 +58,123 @@ function Input() {
     const newWords = [...words];
     newWords[index] = { ...newWords[index], [field]: value };
     setWords(newWords);
+  };
+
+  const handleCsvUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
+      setCsvError('Please select a valid CSV file');
+      return;
+    }
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        if (results.errors.length > 0) {
+          setCsvError('Error parsing CSV file: ' + results.errors[0].message);
+          return;
+        }
+
+        if (results.data.length === 0) {
+          setCsvError('CSV file is empty');
+          return;
+        }
+
+        setCsvData(results.data);
+        setCsvError('');
+        
+        // Auto-populate words
+        const wordRows = results.data.filter(row => row.word || row.translation);
+        if (wordRows.length > 0) {
+          const newWords = wordRows.slice(0, 10).map(row => ({
+            word: row.word || '',
+            translation: row.translation || '',
+            definition: row.definition || '',
+            translatedDefinition: row.translatedDefinition || '',
+            article: row.article || '',
+            plural: row.plural || '',
+            sentence: row.sentence || '',
+            translatedSentence: row.translatedSentence || '',
+            romajiPinyin: row.romajiPinyin || '',
+            kana: row.kana || '',
+            sentenceRomajiPinyin: row.sentenceRomajiPinyin || '',
+            sentenceKana: row.sentenceKana || '',
+            picture: '' // Always empty - must be uploaded manually
+          }));
+
+          // Fill remaining slots with empty objects if less than 10 words
+          while (newWords.length < 10) {
+            newWords.push({
+              word: '',
+              translation: '',
+              definition: '',
+              translatedDefinition: '',
+              article: '',
+              plural: '',
+              sentence: '',
+              translatedSentence: '',
+              picture: '',
+              romajiPinyin: '',
+              kana: '',
+              sentenceRomajiPinyin: '',
+              sentenceKana: ''
+            });
+          }
+
+          setWords(newWords);
+        }
+      },
+      error: (error) => {
+        setCsvError('Error reading CSV file: ' + error.message);
+      }
+    });
+  };
+
+  const downloadCsvTemplate = () => {
+    const template = [
+      {
+        // Word Information (REQUIRED for each word)
+        word: 'hola (TARGET LANGUAGE)',
+        translation: 'hello (ENGLISH)',
+        definition: 'Un saludo (TARGET LANGUAGE)',
+        translatedDefinition: 'A greeting (ENGLISH)',
+        article: 'la (optional)',
+        plural: 'holas (optional)',
+        sentence: 'Hola, ¿cómo estás? (TARGET LANGUAGE)',
+        translatedSentence: 'Hello, how are you? (ENGLISH)',
+        romajiPinyin: '(optional - for Japanese/Chinese pronunciation)',
+        kana: '(optional - for Japanese kanji pronunciation)',
+        sentenceRomajiPinyin: '(optional - sentence pronunciation)',
+        sentenceKana: '(optional - sentence kanji pronunciation)'
+      },
+      {
+        // Second word
+        word: 'adios (TARGET LANGUAGE)',
+        translation: 'goodbye (ENGLISH)',
+        definition: 'Una despedida (TARGET LANGUAGE)',
+        translatedDefinition: 'A farewell (ENGLISH)',
+        article: '',
+        plural: '',
+        sentence: 'Adios, hasta luego (TARGET LANGUAGE)',
+        translatedSentence: 'Goodbye, see you later (ENGLISH)',
+        romajiPinyin: '',
+        kana: '',
+        sentenceRomajiPinyin: '',
+        sentenceKana: ''
+      }
+    ];
+
+    const csv = Papa.unparse(template);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'word_group_template.csv';
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   const uploadImages = async (files) => {
@@ -146,6 +268,89 @@ function Input() {
   return (
     <div className="input-page">
       <h1>Add New Word Group</h1>
+      
+      <div className="csv-upload-section">
+        <h2>CSV Upload (Optional)</h2>
+        <p>Upload a CSV file to pre-fill the form fields. You can still edit the data after upload.</p>
+        
+        <div className="csv-instructions">
+          <button 
+            type="button" 
+            onClick={() => setShowCsvInstructions(!showCsvInstructions)}
+            className="instructions-toggle-btn"
+            style={{ 
+              background: 'none', 
+              border: 'none', 
+              color: '#007bff', 
+              textDecoration: 'underline', 
+              cursor: 'pointer',
+              padding: '0',
+              marginBottom: '10px'
+            }}
+          >
+            {showCsvInstructions ? 'Hide' : 'Show'} CSV Format Instructions
+          </button>
+          
+          {showCsvInstructions && (
+            <div>
+              <h3>CSV Format Instructions:</h3>
+              <ul>
+                <li><strong>Required Fields:</strong> word, translation, definition, translatedDefinition, sentence, translatedSentence</li>
+                <li><strong>Language Guidelines:</strong>
+                  <ul>
+                    <li><strong>Target Language:</strong> word, definition, sentence (in the language you're learning)</li>
+                    <li><strong>English:</strong> translation, translatedDefinition, translatedSentence (English translations)</li>
+                  </ul>
+                </li>
+                <li><strong>Optional Fields:</strong> article, plural, romajiPinyin, kana, sentenceRomajiPinyin, sentenceKana</li>
+                <li><strong>Manual Entry Required:</strong> language, group name, translated group name, language explanation, color, tags, and pictures must be entered manually in the form</li>
+              </ul>
+            </div>
+          )}
+        </div>
+        
+        <div className="csv-controls">
+          <button 
+            type="button" 
+            onClick={downloadCsvTemplate}
+            className="template-btn"
+          >
+            Download CSV Template
+          </button>
+          
+          <div className="file-upload">
+            <label>Upload CSV File:</label>
+            <input
+              type="file"
+              accept=".csv"
+              onChange={handleCsvUpload}
+            />
+          </div>
+        </div>
+        
+        {csvError && (
+          <div className="csv-error">
+            {csvError}
+          </div>
+        )}
+        
+        {csvData && (
+          <div className="csv-success">
+            ✓ CSV uploaded successfully! {csvData.length} rows loaded.
+            <button 
+              type="button" 
+              onClick={() => {
+                setCsvData(null);
+                setCsvError('');
+              }}
+              className="clear-csv-btn"
+            >
+              Clear CSV Data
+            </button>
+          </div>
+        )}
+      </div>
+
       <form onSubmit={handleSubmit}>
         <div className="group-info">
           <h2>Group Information</h2>
