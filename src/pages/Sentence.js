@@ -135,13 +135,16 @@ function Sentence() {
     const targetWord = currentWord?.wordInSentence || currentWord?.word;
     const targetKana = currentWord?.kana;
     const targetRomajiPinyin = currentWord?.romajiPinyin;
+    const targetWordInSentenceRomajiPinyin = currentWord?.wordInSentenceRomajiPinyin;
 
     // Check if input matches any of the accepted forms
     const isMatch = 
       normalizeJapaneseString(value) === normalizeJapaneseString(targetWord) ||
       (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(targetKana)) ||
       (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(targetRomajiPinyin)) ||
-      (isChinese && normalizeString(value) === normalizeString(targetRomajiPinyin));
+      (isJapanese && normalizeJapaneseString(value) === normalizeJapaneseString(targetWordInSentenceRomajiPinyin)) ||
+      (isChinese && normalizeString(value) === normalizeString(targetRomajiPinyin)) ||
+      (isChinese && normalizeString(value) === normalizeString(targetWordInSentenceRomajiPinyin));
     
     if (isMatch) {
       ttsService.current.stop();
@@ -200,7 +203,7 @@ function Sentence() {
               {beginnerMode && (selectedLanguage.code === 'ja' || selectedLanguage.code === 'zh') && scrambledWords[currentIndex].sentenceRomajiPinyin && (
                 <p className="romaji-pinyin">
                   {scrambledWords[currentIndex].sentenceRomajiPinyin.replace(
-                    new RegExp(scrambledWords[currentIndex].romajiPinyin || scrambledWords[currentIndex].wordInSentence || scrambledWords[currentIndex].word, 'gi'),
+                    new RegExp(scrambledWords[currentIndex].wordInSentenceRomajiPinyin || scrambledWords[currentIndex].romajiPinyin || scrambledWords[currentIndex].wordInSentence || scrambledWords[currentIndex].word, 'gi'),
                     '____'
                   )}
                 </p>
