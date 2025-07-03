@@ -183,6 +183,9 @@ function EditWordGroup() {
               kana: row.kana || '',
               sentenceRomajiPinyin: row.sentenceRomajiPinyin || '',
               sentenceKana: row.sentenceKana || '',
+              wordInSentence: row.wordInSentence || '',
+              wordInSentenceKana: row.wordInSentenceKana || '',
+              wordInSentenceRomajiPinyin: row.wordInSentenceRomajiPinyin || '',
               picture: existingPicture // Keep existing picture instead of clearing it
             };
           });
@@ -211,7 +214,10 @@ function EditWordGroup() {
         romajiPinyin: '(optional - for Japanese/Chinese pronunciation)',
         kana: '(optional - for Japanese kanji pronunciation)',
         sentenceRomajiPinyin: '(optional - sentence pronunciation)',
-        sentenceKana: '(optional - sentence kanji pronunciation)'
+        sentenceKana: '(optional - sentence kanji pronunciation)',
+        wordInSentence: '(optional - use if the form of the word in the example sentence is different, e.g. tense/case)',
+        wordInSentenceKana: '(optional - kana for word in sentence, if needed)',
+        wordInSentenceRomajiPinyin: '(optional - romaji/pinyin for word in sentence, if needed)'
       },
       {
         // Second word
@@ -226,7 +232,10 @@ function EditWordGroup() {
         romajiPinyin: '',
         kana: '',
         sentenceRomajiPinyin: '',
-        sentenceKana: ''
+        sentenceKana: '',
+        wordInSentence: '',
+        wordInSentenceKana: '',
+        wordInSentenceRomajiPinyin: ''
       }
     ];
 
@@ -378,8 +387,8 @@ function EditWordGroup() {
                     <li><strong>English:</strong> translation, translatedDefinition, translatedSentence (English translations)</li>
                   </ul>
                 </li>
-                <li><strong>Optional Fields:</strong> article, plural, romajiPinyin, kana, sentenceRomajiPinyin, sentenceKana</li>
-                <li><strong>Note:</strong> Pictures must be uploaded manually in the form below</li>
+                <li><strong>Optional Fields:</strong> article, plural, romajiPinyin, kana, sentenceRomajiPinyin, sentenceKana, <strong>wordInSentence, wordInSentenceKana, wordInSentenceRomajiPinyin</strong></li>
+                <li><strong>Note:</strong> <strong>wordInSentence</strong> fields are for cases where the form of the word in the example sentence is slightly different than the main word (e.g., a different tense or case). Pictures must be uploaded manually in the form below</li>
               </ul>
             </div>
           )}
