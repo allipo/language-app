@@ -234,8 +234,8 @@ function Sentence() {
                 {groupWords.map((word, index) => (
                   <span key={index} className="word-item">
                     {word.wordInSentence || word.word}
-                    {beginnerMode && (selectedLanguage.code === 'ja' || selectedLanguage.code === 'zh') && word.romajiPinyin && (
-                      <span className="romaji-pinyin-small">{word.romajiPinyin}</span>
+                    {beginnerMode && (selectedLanguage.code === 'ja' || selectedLanguage.code === 'zh') && (word.wordInSentenceRomajiPinyin || word.romajiPinyin) && (
+                      <span className="romaji-pinyin-small">{word.wordInSentenceRomajiPinyin || word.romajiPinyin}</span>
                     )}
                   </span>
                 ))}
