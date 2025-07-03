@@ -80,10 +80,11 @@ function Sentence() {
 
   useEffect(() => {
     if (scrambledWords.length > 0 && currentIndex < scrambledWords.length) {
-      const { sentence, word } = scrambledWords[currentIndex];
+      const { sentence, word, wordInSentence } = scrambledWords[currentIndex];
       // Remove only the ending period
       const cleanSentence = sentence.replace(/\.$/, '');
-      const parts = cleanSentence.split(new RegExp(word, 'gi'));
+      const target = wordInSentence || word;
+      const parts = cleanSentence.split(new RegExp(target, 'gi'));
       
       // For Japanese, use a pause instead of "what"
       const whatWord = selectedLanguage.code === 'ja' ? '...' : languageWords[selectedLanguage.code];
@@ -232,7 +233,7 @@ function Sentence() {
               <div className="word-list">
                 {groupWords.map((word, index) => (
                   <span key={index} className="word-item">
-                    {word.word}
+                    {word.wordInSentence || word.word}
                     {beginnerMode && (selectedLanguage.code === 'ja' || selectedLanguage.code === 'zh') && word.romajiPinyin && (
                       <span className="romaji-pinyin-small">{word.romajiPinyin}</span>
                     )}
